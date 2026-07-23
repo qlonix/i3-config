@@ -42,7 +42,8 @@ render_cheatsheet() {
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + c" "i3設定ファイルの再読み込み"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + r" "i3wm の再起動 (Restart)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + u" "GitHubから最新設定へアップデート"
-    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + k" "キーボード設定 (Ctrl/Caps入替・配列)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + k" "キーボード設定 (Ctrl/Caps入替・JP/US配列)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + t" "システムテーマ切替 (ダーク/ライト)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + ?" "このチートシートを表示"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + e" "i3wm 終了メニュー"
     echo ""
@@ -71,9 +72,9 @@ render_cheatsheet() {
     echo ""
 
     echo -e "${MAGENTA}${BOLD}🔊 システム / メディアキー (System)${RESET}"
-    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Volume Up / Down" "音量調整 (+5% / -5%)"
-    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Mute" "消音 (ミュート) 切り替え"
-    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Brightness Up / Down" "画面輝度調整 (+5% / -5%)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Volume Up / Down" "音量調整 (OSD通知表示付き)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Mute" "消音 (ミュート) 切り替え (OSD通知表示付き)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Brightness Up / Down" "画面輝度調整 (OSD通知表示付き)"
     echo -e "${MAGENTA}${BOLD}====================================================${RESET}"
 }
 
