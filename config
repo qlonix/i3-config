@@ -133,19 +133,21 @@ bindsym XF86MonBrightnessDown exec --no-startup-id ~/.config/i3/i3-media-control
 
 # --- ステータスバー ---
 bar {
-        status_command i3status
+        status_command i3status -c ~/.config/i3/i3status.conf
         position bottom
-        # バーのカラースキーム (視認性の高いダークテーマ)
+        font pango:DejaVu Sans Mono, Noto Sans CJK JP 10
+
+        # バーのカラースキーム (モダンなダーク・パステルテーマ)
         colors {
-            background #282A36
-            statusline #F8F8F2
-            separator  #44475A
+            background #1E1E2E
+            statusline #CAD3F5
+            separator  #45475A
 
             # Type             Border  Background Text
-            focused_workspace  #6272A4 #6272A4    #F8F8F2
-            active_workspace   #44475A #44475A    #F8F8F2
-            inactive_workspace #282A36 #282A36    #BFBFBF
-            urgent_workspace   #FF5555 #FF5555    #F8F8F2
+            focused_workspace  #89B4FA #89B4FA    #1E1E2E
+            active_workspace   #45475A #45475A    #CAD3F5
+            inactive_workspace #1E1E2E #1E1E2E    #A6ADC8
+            urgent_workspace   #F38BA8 #F38BA8    #1E1E2E
         }
 }
 
