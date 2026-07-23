@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>i3wm Ultimate Cheat Sheet</title>
+    <style>
+        :root {
+            --bg: #282A36;
+            --fg: #F8F8F2;
+            --current-line: #44475A;
+            --comment: #6272A4;
+            --cyan: #8BE9FD;
+            --green: #50FA7B;
+            --orange: #FFB86C;
+            --pink: #FF79C6;
+            --purple: #BD93F9;
+            --red: #FF5555;
+            --yellow: #F1FA8C;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--purple);
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--comment);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .important-note {
+            text-align: center;
+            background-color: var(--current-line);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--pink);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #383A59;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--current-line);
+            padding-bottom: 10px;
+            font-size: 1.4em;
+        }
+
+        /* カテゴリごとのアクセントカラー */
+        .basics h2 { color: var(--cyan); border-color: var(--cyan); }
+        .focus h2 { color: var(--green); border-color: var(--green); }
+        .layout h2 { color: var(--yellow); border-color: var(--yellow); }
+        .workspace h2 { color: var(--orange); border-color: var(--orange); }
+        .system h2 { color: var(--pink); border-color: var(--pink); }
+
+        .shortcut {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--current-line);
+        }
+
+        .shortcut:last-child {
+            border-bottom: none;
+        }
+
+        .desc {
+            color: var(--fg);
+        }
+
+        .keys {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        kbd {
+            background-color: var(--bg);
+            color: var(--fg);
+            padding: 4px 8px;
+            border-radius: 5px;
+            border: 1px solid var(--comment);
+            border-bottom: 3px solid var(--comment);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        kbd.mod {
+            color: var(--cyan);
+            border-color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>i3wm Ultimate Cheat Sheet</h1>
+    <div class="subtitle">直感的でストレスフリーな操作ガイド</div>
+
+    <div class="important-note">
+        <strong>💡 基本ルール:</strong> この設定では <kbd class="mod">Mod</kbd> キーは <strong>Windowsキー (Super)</strong> に設定されています。
+    </div>
+
+    <div class="container">
+        <div class="card basics">
+            <h2>🚀 Basics (基本操作)</h2>
+            <div class="shortcut"><span class="desc">ターミナルを起動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Enter</kbd></div></div>
+            <div class="shortcut"><span class="desc">ランチャー (Rofi) 起動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>d</kbd></div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを閉じる</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>q</kbd></div></div>
+            <div class="shortcut"><span class="desc">i3の再読み込み</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>c</kbd></div></div>
+            <div class="shortcut"><span class="desc">i3の再起動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>r</kbd></div></div>
+            <div class="shortcut"><span class="desc">i3の終了メニュー</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>e</kbd></div></div>
+        </div>
+
+        <div class="card focus">
+            <h2>🪟 Focus & Move (フォーカスと移動)</h2>
+            <div class="shortcut"><span class="desc">左へフォーカス</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>h</kbd> または <kbd>←</kbd></div></div>
+            <div class="shortcut"><span class="desc">下へフォーカス</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>j</kbd> または <kbd>↓</kbd></div></div>
+            <div class="shortcut"><span class="desc">上へフォーカス</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>k</kbd> または <kbd>↑</kbd></div></div>
+            <div class="shortcut"><span class="desc">右へフォーカス</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>l</kbd> または <kbd>→</kbd></div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを左へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>h</kbd> (or <kbd>←</kbd>)</div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを下へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>j</kbd> (or <kbd>↓</kbd>)</div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを上へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>k</kbd> (or <kbd>↑</kbd>)</div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを右へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>l</kbd> (or <kbd>→</kbd>)</div></div>
+        </div>
+
+        <div class="card layout">
+            <h2>📐 Layouts (レイアウト操作)</h2>
+            <div class="shortcut"><span class="desc">次を「水平」に分割</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>b</kbd></div></div>
+            <div class="shortcut"><span class="desc">次を「垂直」に分割</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>v</kbd></div></div>
+            <div class="shortcut"><span class="desc">フルスクリーン切替</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>f</kbd></div></div>
+            <div class="shortcut"><span class="desc">スタック(縦並び)にする</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>s</kbd></div></div>
+            <div class="shortcut"><span class="desc">タブ(横並び)にする</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>w</kbd></div></div>
+            <div class="shortcut"><span class="desc">分割モードの切替</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>e</kbd></div></div>
+            <div class="shortcut"><span class="desc">浮きウィンドウ(フロート)切替</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd></div></div>
+            <div class="shortcut"><span class="desc">フロート/タイル間のフォーカス移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Space</kbd></div></div>
+        </div>
+
+        <div class="card workspace">
+            <h2>🖥️ Workspaces (ワークスペース)</h2>
+            <div class="shortcut"><span class="desc">WS 1〜0 へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>1</kbd> - <kbd>0</kbd></div></div>
+            <div class="shortcut"><span class="desc">ウィンドウを WS 1〜0 へ移動</span><div class="keys"><kbd class="mod">Mod</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> - <kbd>0</kbd></div></div>
+        </div>
+
+        <div class="card system">
+            <h2>🔊 System (メディアキー)</h2>
+            <div class="shortcut"><span class="desc">音量を上げる</span><div class="keys"><kbd>Volume Up</kbd></div></div>
+            <div class="shortcut"><span class="desc">音量を下げる</span><div class="keys"><kbd>Volume Down</kbd></div></div>
+            <div class="shortcut"><span class="desc">ミュート切替</span><div class="keys"><kbd>Mute</kbd></div></div>
+            <div class="shortcut"><span class="desc">画面を明るく</span><div class="keys"><kbd>Brightness Up</kbd></div></div>
+            <div class="shortcut"><span class="desc">画面を暗く</span><div class="keys"><kbd>Brightness Down</kbd></div></div>
+        </div>
+    </div>
+
+</body>
+</html>

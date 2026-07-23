@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# エラーが発生したらスクリプトを停止する
+set -e
+
+# ==========================================
+# ユーザー設定 (ここをご自身のGitHubに合わせて変更してください)
+# ==========================================
+GITHUB_USER="qlonix"
+REPO_NAME="i3-config"
+BRANCH="main"
+RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}"
+
+echo "🚀 Starting i3wm Ultimate Setup..."
+
+# ==========================================
+# 1. パッケージマネージャーの判別とインストール
+# ==========================================
+if command -v apt &> /dev/null; then
+    echo "📦 Detected Debian/Ubuntu (apt). Installing packages..."
+    sudo apt update
+    sudo apt install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl
+elif command -v pacman &> /dev/null; then
+    echo "📦 Detected Arch Linux (pacman). Installing packages..."
+    sudo pacman -Syu --noconfirm i3-wm rofi picom feh brightnessctl pavucontrol pulseaudio curl
+elif command -v dnf &> /dev/null; then
+    echo "📦 Detected Fedora/RHEL (dnf). Installing packages..."
+    sudo dnf install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl
+else
+    echo "⚠️ Unsupported package manager. Please install dependencies manually."
+fi
+
+# ==========================================
+# 2. i3 ディレクトリの準備とバックアップ
+# ==========================================
+I3_DIR="$HOME/.config/i3"
+mkdir -p "$I3_DIR"
+
+if [ -f "$I3_DIR/config" ]; then
+    BACKUP_NAME="config.backup.$(date +%Y%m%d_%H%M%S)"
+    echo "💾 Backing up existing i3 config to ${BACKUP_NAME}..."
+    mv "$I3_DIR/config" "$I3_DIR/${BACKUP_NAME}"
+fi
+
+# ==========================================
+# 3. GitHubから最新の設定ファイルをダウンロード
+# ==========================================
+echo "⬇️ Downloading ultimate i3 config from GitHub..."
+curl -fsSL "${RAW_URL}/config" -o "$I3_DIR/config"
+
+echo "⬇️ Downloading i3 cheat sheet..."
+curl -fsSL "${RAW_URL}/i3-cheatsheet.html" -o "$I3_DIR/i3-cheatsheet.html"
+
+# ==========================================
+# 4. 完了処理
+# ==========================================
+echo "✅ Setup Complete!"
+
+# i3が既に起動している場合は、設定を再読み込みする
+if command -v i3-msg &> /dev/null && pgrep -x i3 > /dev/null; then
+    echo "🔄 Reloading i3 to apply changes..."
+    i3-msg reload
+else
+    echo "🎉 Please log out and log back in, selecting i3 as your window manager."
+fi
