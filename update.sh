@@ -10,6 +10,7 @@ GITHUB_USER="qlonix"
 REPO_NAME="i3-config"
 BRANCH="main"
 RAW_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}"
+ARCHIVE_URL="https://github.com/${GITHUB_USER}/${REPO_NAME}/archive/refs/heads/${BRANCH}.tar.gz"
 I3_DIR="$HOME/.config/i3"
 
 echo "🔄 Updating i3wm configuration..."
@@ -17,26 +18,41 @@ echo "🔄 Updating i3wm configuration..."
 # 実行元のディレクトリ
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
 
-# Gitリポジトリ内で実行された場合、または ~/.config/i3 が Git リポジトリの場合
-if [ -d "$SCRIPT_DIR/.git" ]; then
-    echo "📦 Detected Git repository at ${SCRIPT_DIR}. Pulling latest changes..."
-    cd "$SCRIPT_DIR"
-    git pull origin "$BRANCH"
+# ==========================================
+# 1. セルフアップデート機構
+# 古い update.sh が実行された場合でも、まず自身をGitHubから最新化して再実行します
+# ==========================================
+if [ "$UPDATER_REEXEC" != "1" ]; then
+    export UPDATER_REEXEC=1
     
-    if [ "$SCRIPT_DIR" != "$I3_DIR" ]; then
+    if [ -d "$SCRIPT_DIR/.git" ]; then
+        echo "📦 Git repository detected at ${SCRIPT_DIR}. Pulling latest changes..."
+        git -C "$SCRIPT_DIR" pull origin "$BRANCH"
+        exec bash "$SCRIPT_DIR/update.sh" "$@"
+    elif [ -d "$I3_DIR/.git" ]; then
+        echo "📦 Git repository detected at ${I3_DIR}. Pulling latest changes..."
+        git -C "$I3_DIR" pull origin "$BRANCH"
+        exec bash "$I3_DIR/update.sh" "$@"
+    else
+        echo "⬇️ Self-updating update.sh from GitHub..."
         mkdir -p "$I3_DIR"
-        cp "$SCRIPT_DIR/config" "$I3_DIR/config"
-        cp "$SCRIPT_DIR/i3-cheatsheet.html" "$I3_DIR/i3-cheatsheet.html"
-        cp "$SCRIPT_DIR/update.sh" "$I3_DIR/update.sh"
-        cp "$SCRIPT_DIR/i3-keyboard-setup.sh" "$I3_DIR/i3-keyboard-setup.sh"
-        chmod +x "$I3_DIR/update.sh" "$I3_DIR/i3-keyboard-setup.sh"
+        TEMP_UPDATER=$(mktemp)
+        if curl -fsSL "${RAW_URL}/update.sh" -o "$TEMP_UPDATER"; then
+            chmod +x "$TEMP_UPDATER"
+            cp "$TEMP_UPDATER" "$I3_DIR/update.sh"
+            rm -f "$TEMP_UPDATER"
+            echo "🚀 Re-executing updated updater script..."
+            exec bash "$I3_DIR/update.sh" "$@"
+        fi
     fi
-elif [ -d "$I3_DIR/.git" ]; then
-    echo "📦 Detected Git repository at ${I3_DIR}. Pulling latest changes..."
-    cd "$I3_DIR"
-    git pull origin "$BRANCH"
-else
-    echo "⬇️ Downloading latest config files from GitHub..."
+fi
+
+# ==========================================
+# 2. リポジトリ全体のアーカイブ同期
+# 個別ファイル名指定ではなく、GitHubの全ファイルアーカイブ(tar.gz)を展開して完全同期します
+# ==========================================
+if [ ! -d "$SCRIPT_DIR/.git" ] && [ ! -d "$I3_DIR/.git" ]; then
+    echo "📦 Downloading latest repository archive from GitHub..."
     mkdir -p "$I3_DIR"
     
     if [ -f "$I3_DIR/config" ]; then
@@ -45,14 +61,20 @@ else
         cp "$I3_DIR/config" "$I3_DIR/${BACKUP_NAME}"
     fi
 
-    curl -fsSL "${RAW_URL}/config" -o "$I3_DIR/config"
-    curl -fsSL "${RAW_URL}/i3-cheatsheet.html" -o "$I3_DIR/i3-cheatsheet.html"
-    curl -fsSL "${RAW_URL}/update.sh" -o "$I3_DIR/update.sh"
-    curl -fsSL "${RAW_URL}/i3-keyboard-setup.sh" -o "$I3_DIR/i3-keyboard-setup.sh"
-    chmod +x "$I3_DIR/update.sh" "$I3_DIR/i3-keyboard-setup.sh"
+    TEMP_TAR=$(mktemp 2>/dev/null || echo "/tmp/i3_archive.tar.gz")
+    curl -fsSL "$ARCHIVE_URL" -o "$TEMP_TAR"
+    tar -xzf "$TEMP_TAR" --strip-components=1 -C "$I3_DIR"
+    rm -f "$TEMP_TAR"
+elif [ -d "$SCRIPT_DIR/.git" ] && [ "$SCRIPT_DIR" != "$I3_DIR" ]; then
+    mkdir -p "$I3_DIR"
+    cp -r "$SCRIPT_DIR"/* "$I3_DIR"/ 2>/dev/null || true
 fi
 
-# コマンドとしてどこからでも呼び出せるように ~/.local/bin にシンボリックリンクを作成
+# ==========================================
+# 3. 権限設定およびコマンド（シンボリックリンク）登録
+# ==========================================
+chmod +x "$I3_DIR"/*.sh 2>/dev/null || true
+
 LOCAL_BIN="$HOME/.local/bin"
 if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/update.sh" "$LOCAL_BIN/i3-config-update" 2>/dev/null || true
@@ -61,8 +83,10 @@ fi
 
 echo "✅ Update Complete!"
 
-# i3が既に起動している場合は、設定を再読み込みする
+# ==========================================
+# 4. i3 の再起動 (新しい設定とスクリプトを適用)
+# ==========================================
 if command -v i3-msg &> /dev/null && pgrep -x i3 > /dev/null; then
-    echo "🔄 Reloading i3 to apply changes..."
-    i3-msg reload
+    echo "🔄 Restarting i3 to apply changes..."
+    i3-msg restart
 fi
