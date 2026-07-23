@@ -6,19 +6,11 @@
 # ==========================================
 
 get_volume() {
-    pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -Po '[0-9]+(?=%)' | head -n 1
+    LC_ALL=C pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -Po '[0-9]+(?=%)' | head -n 1
 }
 
 is_muted() {
-    pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -i "yes"
-}
-
-get_brightness() {
-    if command -v brightnessctl &>/dev/null; then
-        brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d '%'
-    else
-        echo ""
-    fi
+    LC_ALL=C pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -i "yes"
 }
 
 make_bar() {
@@ -51,20 +43,66 @@ notify_osd() {
     fi
 }
 
+adjust_brightness() {
+    local dir="$1" # "up" or "down"
+    
+    # 1. まず brightnessctl (ハードウェア輝度) を試す
+    if command -v brightnessctl &>/dev/null; then
+        local err
+        if [ "$dir" = "up" ]; then
+            err=$(brightnessctl set +5% 2>&1)
+        else
+            err=$(brightnessctl set 5%- 2>&1)
+        fi
+        local ret=$?
+        
+        if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]]; then
+            BRIGHT=$(brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+            notify_osd "brightness" "☀️ 明るさ" "$BRIGHT"
+            return 0
+        fi
+    fi
+    
+    # 2. brightnessctl が権限エラー等で失敗した場合、xrandr (ソフトウェア輝度) に自動フォールバック
+    local STATE_FILE="$HOME/.config/i3/.brightness_val"
+    local CURR=100
+    if [ -f "$STATE_FILE" ]; then
+        CURR=$(cat "$STATE_FILE")
+    fi
+    
+    if [ "$dir" = "up" ]; then
+        CURR=$((CURR + 5))
+        [ $CURR -gt 100 ] && CURR=100
+    else
+        CURR=$((CURR - 5))
+        [ $CURR -lt 10 ] && CURR=10
+    fi
+    
+    echo "$CURR" > "$STATE_FILE"
+    
+    local FLOAT_VAL=$(awk "BEGIN {printf \"%.2f\", $CURR / 100}")
+    local DISP=$(xrandr 2>/dev/null | grep -w "connected" | cut -d' ' -f1 | head -n 1)
+    
+    if [ -n "$DISP" ]; then
+        xrandr --output "$DISP" --brightness "$FLOAT_VAL" 2>/dev/null || true
+        notify_osd "brightness" "☀️ 明るさ" "$CURR"
+    fi
+}
+
 case "$1" in
     vol-up)
-        pactl set-sink-volume @DEFAULT_SINK@ +5% 2>/dev/null || true
-        pactl set-sink-mute @DEFAULT_SINK@ 0 2>/dev/null || true
+        LC_ALL=C pactl set-sink-volume @DEFAULT_SINK@ +5% 2>/dev/null || true
+        LC_ALL=C pactl set-sink-mute @DEFAULT_SINK@ 0 2>/dev/null || true
         VOL=$(get_volume)
         notify_osd "volume" "🔊 音量" "$VOL"
         ;;
     vol-down)
-        pactl set-sink-volume @DEFAULT_SINK@ -5% 2>/dev/null || true
+        LC_ALL=C pactl set-sink-volume @DEFAULT_SINK@ -5% 2>/dev/null || true
         VOL=$(get_volume)
         notify_osd "volume" "🔉 音量" "$VOL"
         ;;
     vol-mute)
-        pactl set-sink-mute @DEFAULT_SINK@ toggle 2>/dev/null || true
+        LC_ALL=C pactl set-sink-mute @DEFAULT_SINK@ toggle 2>/dev/null || true
         if [ -n "$(is_muted)" ]; then
             notify_osd "volume" "🔇 ミュート (消音)" ""
         else
@@ -73,18 +111,10 @@ case "$1" in
         fi
         ;;
     bright-up)
-        if command -v brightnessctl &>/dev/null; then
-            brightnessctl set +5% 2>/dev/null || true
-            BRIGHT=$(get_brightness)
-            notify_osd "brightness" "☀️ 明るさ" "$BRIGHT"
-        fi
+        adjust_brightness "up"
         ;;
     bright-down)
-        if command -v brightnessctl &>/dev/null; then
-            brightnessctl set 5%- 2>/dev/null || true
-            BRIGHT=$(get_brightness)
-            notify_osd "brightness" "🔆 明るさ" "$BRIGHT"
-        fi
+        adjust_brightness "down"
         ;;
     *)
         echo "Usage: $0 {vol-up|vol-down|vol-mute|bright-up|bright-down}"
