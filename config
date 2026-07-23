@@ -31,11 +31,15 @@ bindsym $mod+Shift+q kill
 # アプリケーションランチャーを起動
 bindsym $mod+d exec --no-startup-id $menu
 
-# i3の再読み込み / 再起動 / 終了 / 設定アップデート / チートシート表示
+# --- テーマ設定 ---
+include ~/.config/i3/theme.conf
+
+# i3の再読み込み / 再起動 / 終了 / 設定アップデート / チートシート表示 / テーマ設定
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 bindsym $mod+Shift+u exec --no-startup-id ~/.config/i3/update.sh
 bindsym $mod+Control+k exec --no-startup-id ~/.config/i3/i3-keyboard-setup.sh
+bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'i3を終了しますか？' -B 'はい' 'i3-msg exit'"
 
@@ -137,22 +141,23 @@ bar {
         position bottom
         font pango:DejaVu Sans Mono, Noto Sans CJK JP 10
 
-        # バーのカラースキーム (モダンなダーク・パステルテーマ)
+        # バーのカラースキーム (テーマ変数連動)
         colors {
-            background #1E1E2E
-            statusline #CAD3F5
-            separator  #45475A
+            background $theme_bg
+            statusline $theme_fg
+            separator  $theme_separator
 
-            # Type             Border  Background Text
-            focused_workspace  #89B4FA #89B4FA    #1E1E2E
-            active_workspace   #45475A #45475A    #CAD3F5
-            inactive_workspace #1E1E2E #1E1E2E    #A6ADC8
-            urgent_workspace   #F38BA8 #F38BA8    #1E1E2E
+            # Type             Border            Background         Text
+            focused_workspace  $theme_focused_bg  $theme_focused_bg  $theme_focused_fg
+            active_workspace   $theme_active_bg   $theme_active_bg   $theme_active_fg
+            inactive_workspace $theme_inactive_bg $theme_inactive_bg $theme_inactive_fg
+            urgent_workspace   $theme_urgent_bg   $theme_urgent_bg   $theme_urgent_fg
         }
 }
 
 # --- 自動起動 (Autostart) ---
-# 保存されたキーボードレイアウト・キー割り当て(Ctrl/Caps入れ替え等)を適用
+# 保存されたテーマ・キーボードレイアウト(Ctrl/Caps入れ替え等)を適用
+exec_always --no-startup-id ~/.config/i3/i3-theme-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-keyboard-setup.sh apply
 
 # 通知デーモンの起動 (OSDポップアップ用)

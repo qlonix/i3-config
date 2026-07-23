@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# ==========================================
+# i3wm システム全体 ライト/ダークテーマ設定ツール
+# GTK3/4, Qt, i3bar, i3status などのテーマを一括切り替え
+# ==========================================
+
+THEME_FILE="$HOME/.config/i3/current_theme"
+I3_DIR="$HOME/.config/i3"
+
+get_current_theme() {
+    if [ -f "$THEME_FILE" ]; then
+        cat "$THEME_FILE"
+    else
+        echo "dark"
+    fi
+}
+
+apply_dark_theme() {
+    echo "dark" > "$THEME_FILE"
+    
+    # 1. GTK3 / GTK4 設定
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+    fi
+    
+    mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+    cat <<EOF > "$HOME/.config/gtk-3.0/settings.ini"
+[Settings]
+gtk-theme-name=Adwaita-dark
+gtk-application-prefer-dark-theme=1
+EOF
+    cat <<EOF > "$HOME/.config/gtk-4.0/settings.ini"
+[Settings]
+gtk-theme-name=Adwaita-dark
+gtk-application-prefer-dark-theme=1
+EOF
+
+    # 2. i3status.conf (ダークテーマ用カラー)
+    if [ -f "$I3_DIR/i3status.conf" ]; then
+        sed -i 's/color_good = .*/color_good = "#50FA7B"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_degraded = .*/color_degraded = "#F1FA8C"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_bad = .*/color_bad = "#FF5555"/' "$I3_DIR/i3status.conf"
+    fi
+
+    # 3. i3 config テーマ定義の書き換え
+    cat <<EOF > "$I3_DIR/theme.conf"
+# i3wm Dark Theme Colors
+set \$theme_bg #1E1E2E
+set \$theme_fg #CAD3F5
+set \$theme_separator #45475A
+set \$theme_focused_bg #89B4FA
+set \$theme_focused_fg #1E1E2E
+set \$theme_active_bg #45475A
+set \$theme_active_fg #CAD3F5
+set \$theme_inactive_bg #1E1E2E
+set \$theme_inactive_fg #A6ADC8
+set \$theme_urgent_bg #F38BA8
+set \$theme_urgent_fg #1E1E2E
+EOF
+
+    if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
+        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "🌙 テーマ変更" "ダークモードを適用しました"
+    else
+        echo "✅ ダークモードを適用しました"
+    fi
+}
+
+apply_light_theme() {
+    echo "light" > "$THEME_FILE"
+    
+    # 1. GTK3 / GTK4 設定
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita' 2>/dev/null || true
+    fi
+    
+    mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+    cat <<EOF > "$HOME/.config/gtk-3.0/settings.ini"
+[Settings]
+gtk-theme-name=Adwaita
+gtk-application-prefer-dark-theme=0
+EOF
+    cat <<EOF > "$HOME/.config/gtk-4.0/settings.ini"
+[Settings]
+gtk-theme-name=Adwaita
+gtk-application-prefer-dark-theme=0
+EOF
+
+    # 2. i3status.conf (ライトテーマ用カラー)
+    if [ -f "$I3_DIR/i3status.conf" ]; then
+        sed -i 's/color_good = .*/color_good = "#40A02B"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_degraded = .*/color_degraded = "#DF8E1D"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_bad = .*/color_bad = "#D20F39"/' "$I3_DIR/i3status.conf"
+    fi
+
+    # 3. i3 config テーマ定義の書き換え
+    cat <<EOF > "$I3_DIR/theme.conf"
+# i3wm Light Theme Colors
+set \$theme_bg #EFF1F5
+set \$theme_fg #4C4F69
+set \$theme_separator #BCC0CC
+set \$theme_focused_bg #1E66F5
+set \$theme_focused_fg #EFF1F5
+set \$theme_active_bg #BCC0CC
+set \$theme_active_fg #4C4F69
+set \$theme_inactive_bg #EFF1F5
+set \$theme_inactive_fg #6C6F85
+set \$theme_urgent_bg #E64553
+set \$theme_urgent_fg #EFF1F5
+EOF
+
+    if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
+        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "☀️ テーマ変更" "ライトモードを適用しました"
+    else
+        echo "✅ ライトモードを適用しました"
+    fi
+}
+
+toggle_theme() {
+    local current=$(get_current_theme)
+    if [ "$current" = "dark" ]; then
+        apply_light_theme
+    else
+        apply_dark_theme
+    fi
+    if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
+        i3-msg restart
+    fi
+}
+
+# 引数別処理
+case "$1" in
+    apply)
+        CURRENT=$(get_current_theme)
+        if [ "$CURRENT" = "light" ]; then
+            apply_light_theme
+        else
+            apply_dark_theme
+        fi
+        exit 0
+        ;;
+    dark)
+        apply_dark_theme
+        if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
+            i3-msg restart
+        fi
+        exit 0
+        ;;
+    light)
+        apply_light_theme
+        if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
+            i3-msg restart
+        fi
+        exit 0
+        ;;
+    toggle)
+        toggle_theme
+        exit 0
+        ;;
+esac
+
+# GUI (Rofi) または CLI メニュー表示
+if command -v rofi &>/dev/null && [ -n "$DISPLAY" ]; then
+    CURRENT=$(get_current_theme)
+    CHOICE=$(echo -e "🌙 ダークモード (Dark Theme)\n☀️ ライトモード (Light Theme)\n🔄 ダーク/ライト切り替え (Toggle)" | rofi -dmenu -i -p "🎨 システムテーマ設定 (現在: $CURRENT)")
+    
+    case "$CHOICE" in
+        *"ダークモード"*)
+            apply_dark_theme
+            i3-msg restart
+            ;;
+        *"ライトモード"*)
+            apply_light_theme
+            i3-msg restart
+            ;;
+        *"切り替え"*)
+            toggle_theme
+            ;;
+    esac
+elif [ ! -t 0 ] && [ -n "$DISPLAY" ]; then
+    if command -v i3-sensible-terminal &>/dev/null; then
+        exec i3-sensible-terminal -e "$0"
+    elif command -v x-terminal-emulator &>/dev/null; then
+        exec x-terminal-emulator -e "$0"
+    fi
+else
+    echo "🎨 システムテーマ設定 (現在: $(get_current_theme))"
+    echo "----------------------------"
+    echo "1) 🌙 ダークモード"
+    echo "2) ☀️ ライトモード"
+    echo "3) 🔄 モード切替 (Toggle)"
+    read -p "選択してください [1-3]: " num
+    case "$num" in
+        1) apply_dark_theme; command -v i3-msg &>/dev/null && i3-msg restart ;;
+        2) apply_light_theme; command -v i3-msg &>/dev/null && i3-msg restart ;;
+        3) toggle_theme ;;
+    esac
+fi
