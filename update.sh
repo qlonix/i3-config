@@ -28,7 +28,8 @@ if [ -d "$SCRIPT_DIR/.git" ]; then
         cp "$SCRIPT_DIR/config" "$I3_DIR/config"
         cp "$SCRIPT_DIR/i3-cheatsheet.html" "$I3_DIR/i3-cheatsheet.html"
         cp "$SCRIPT_DIR/update.sh" "$I3_DIR/update.sh"
-        chmod +x "$I3_DIR/update.sh"
+        cp "$SCRIPT_DIR/i3-keyboard-setup.sh" "$I3_DIR/i3-keyboard-setup.sh"
+        chmod +x "$I3_DIR/update.sh" "$I3_DIR/i3-keyboard-setup.sh"
     fi
 elif [ -d "$I3_DIR/.git" ]; then
     echo "📦 Detected Git repository at ${I3_DIR}. Pulling latest changes..."
@@ -47,13 +48,15 @@ else
     curl -fsSL "${RAW_URL}/config" -o "$I3_DIR/config"
     curl -fsSL "${RAW_URL}/i3-cheatsheet.html" -o "$I3_DIR/i3-cheatsheet.html"
     curl -fsSL "${RAW_URL}/update.sh" -o "$I3_DIR/update.sh"
-    chmod +x "$I3_DIR/update.sh"
+    curl -fsSL "${RAW_URL}/i3-keyboard-setup.sh" -o "$I3_DIR/i3-keyboard-setup.sh"
+    chmod +x "$I3_DIR/update.sh" "$I3_DIR/i3-keyboard-setup.sh"
 fi
 
 # コマンドとしてどこからでも呼び出せるように ~/.local/bin にシンボリックリンクを作成
 LOCAL_BIN="$HOME/.local/bin"
 if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/update.sh" "$LOCAL_BIN/i3-config-update" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-keyboard-setup.sh" "$LOCAL_BIN/i3-keyboard-setup" 2>/dev/null || true
 fi
 
 echo "✅ Update Complete!"

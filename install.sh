@@ -55,10 +55,15 @@ echo "⬇️ Downloading update script..."
 curl -fsSL "${RAW_URL}/update.sh" -o "$I3_DIR/update.sh"
 chmod +x "$I3_DIR/update.sh"
 
+echo "⬇️ Downloading keyboard setup script..."
+curl -fsSL "${RAW_URL}/i3-keyboard-setup.sh" -o "$I3_DIR/i3-keyboard-setup.sh"
+chmod +x "$I3_DIR/i3-keyboard-setup.sh"
+
 # コマンドとしてどこからでも呼び出せるように ~/.local/bin にシンボリックリンクを作成
 LOCAL_BIN="$HOME/.local/bin"
 if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/update.sh" "$LOCAL_BIN/i3-config-update" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-keyboard-setup.sh" "$LOCAL_BIN/i3-keyboard-setup" 2>/dev/null || true
 fi
 
 # ==========================================

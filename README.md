@@ -81,6 +81,23 @@ curl -fsSL https://raw.githubusercontent.com/qlonix/i3-config/main/update.sh | b
 
 ---
 
+## ⌨️ キーボード設定・レイアウト変更 (Cinnamon風)
+
+Cinnamonのキーボード設定画面のように、CtrlとCaps Lockの入れ替えやキー配列の変更を対話式GUI/CLIで簡単に行うことができます。
+
+- **設定メニューの起動**:
+  - ショートカット: `Super + Ctrl + k`
+  - コマンド: `i3-keyboard-setup` (または `~/.config/i3/i3-keyboard-setup.sh`)
+- **主な設定項目**:
+  - 🔄 **Ctrl と Caps Lock の入れ替え** (`ctrl:swapcaps`)
+  - 🔤 **Caps Lock を Ctrl キーに変更** (`ctrl:nocaps`)
+  - 🇯🇵 **日本語配列 (jp)**
+  - 🇺🇸 **英語配列 (us)**
+  - ↺ **デフォルトにリセット**
+- **自動保存と永続化**: 選択した設定は `~/.config/i3/keyboard.conf` に保存され、i3の起動時・リロード時に自動適用されます。
+
+---
+
 ## 📂 ファイル構成
 
 | ファイル名 | 説明 |
@@ -88,6 +105,7 @@ curl -fsSL https://raw.githubusercontent.com/qlonix/i3-config/main/update.sh | b
 | `config` | i3wm のメイン設定ファイル (`~/.config/i3/config` へ配置) |
 | `install.sh` | 依存関係のインストールおよび設定配置を行う自動スクリプト |
 | `update.sh` | GitHub上の最新設定を取得・適用しi3をリロードするアップデートスクリプト |
+| `i3-keyboard-setup.sh` | 対話式キーボードレイアウト & Ctrl/Caps設定ツール |
 | `i3-cheatsheet.html` | キーバインドを一覧確認できるHTMLチートシート |
 | `.agent/RULES.md` | 本プロジェクトの開発・コーディングルール |
 
@@ -105,6 +123,7 @@ curl -fsSL https://raw.githubusercontent.com/qlonix/i3-config/main/update.sh | b
 | `Super + Shift + c` | i3設定ファイルの再読み込み |
 | `Super + Shift + r` | i3の再起動 |
 | `Super + Shift + u` | GitHubから最新設定を取得してアップデート |
+| `Super + Ctrl + k` | キーボードレイアウト & Ctrl/Caps設定メニュー |
 
 ---
 
