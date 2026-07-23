@@ -3,7 +3,7 @@
 # ==========================================
 # i3wm システム全体 ライト/ダークテーマ設定ツール
 # 動作中の全アプリケーション(GTK3/4, D-Bus Portal, Qt, Electron, i3bar, i3status)へ
-# リアルタイムに環境設定(ダーク/ライト)を一括適用・同期します
+# 高コントラストな配色設定(ダーク/ライト)を一括適用・同期します
 # ==========================================
 
 THEME_FILE="$HOME/.config/i3/current_theme"
@@ -73,31 +73,34 @@ apply_dark_theme() {
     # システム環境設定の適用 (Dark)
     apply_system_theme "Adwaita-dark" 1 "prefer-dark" 1
 
-    # i3status.conf (ダークテーマ用カラー)
+    # i3status.conf (ダークモード高コントラストカラー)
     if [ -f "$I3_DIR/i3status.conf" ]; then
-        sed -i 's/color_good = .*/color_good = "#50FA7B"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_degraded = .*/color_degraded = "#F1FA8C"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_bad = .*/color_bad = "#FF5555"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_good = .*/color_good = "#A6E3A1"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_degraded = .*/color_degraded = "#F9E2AF"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_bad = .*/color_bad = "#F38BA8"/' "$I3_DIR/i3status.conf"
     fi
 
-    # i3 config テーマ定義の書き換え
+    # i3 config テーマ定義の書き換え (Dark)
     cat <<EOF > "$I3_DIR/theme.conf"
 # i3wm Dark Theme Colors
-set \$theme_bg #1E1E2E
-set \$theme_fg #CAD3F5
+set \$theme_bg #181825
+set \$theme_fg #CDD6F4
 set \$theme_separator #45475A
 set \$theme_focused_bg #89B4FA
-set \$theme_focused_fg #1E1E2E
+set \$theme_focused_fg #11111B
 set \$theme_active_bg #45475A
-set \$theme_active_fg #CAD3F5
-set \$theme_inactive_bg #1E1E2E
+set \$theme_active_fg #CDD6F4
+set \$theme_inactive_bg #181825
 set \$theme_inactive_fg #A6ADC8
 set \$theme_urgent_bg #F38BA8
-set \$theme_urgent_fg #1E1E2E
+set \$theme_urgent_fg #11111B
 EOF
 
+    # i3status プロセスを更新
+    pkill -x i3status 2>/dev/null || true
+
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
-        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "🌙 システムテーマ変更" "全アプリケーションへダークモードを適用しました"
+        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "🌙 システムテーマ変更" "ダークモードを適用しました"
     else
         echo "✅ 全アプリケーションへダークモードを適用しました"
     fi
@@ -109,31 +112,34 @@ apply_light_theme() {
     # システム環境設定の適用 (Light)
     apply_system_theme "Adwaita" 0 "prefer-light" 2
 
-    # i3status.conf (ライトテーマ用カラー)
+    # i3status.conf (ライトモード高コントラストカラー)
     if [ -f "$I3_DIR/i3status.conf" ]; then
-        sed -i 's/color_good = .*/color_good = "#40A02B"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_degraded = .*/color_degraded = "#DF8E1D"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_good = .*/color_good = "#188038"/' "$I3_DIR/i3status.conf"
+        sed -i 's/color_degraded = .*/color_degraded = "#B06000"/' "$I3_DIR/i3status.conf"
         sed -i 's/color_bad = .*/color_bad = "#D20F39"/' "$I3_DIR/i3status.conf"
     fi
 
-    # i3 config テーマ定義の書き換え
+    # i3 config テーマ定義の書き換え (Light)
     cat <<EOF > "$I3_DIR/theme.conf"
 # i3wm Light Theme Colors
-set \$theme_bg #EFF1F5
-set \$theme_fg #4C4F69
-set \$theme_separator #BCC0CC
+set \$theme_bg #E6E9EF
+set \$theme_fg #20222C
+set \$theme_separator #9CA0B0
 set \$theme_focused_bg #1E66F5
-set \$theme_focused_fg #EFF1F5
-set \$theme_active_bg #BCC0CC
-set \$theme_active_fg #4C4F69
-set \$theme_inactive_bg #EFF1F5
-set \$theme_inactive_fg #6C6F85
-set \$theme_urgent_bg #E64553
-set \$theme_urgent_fg #EFF1F5
+set \$theme_focused_fg #FFFFFF
+set \$theme_active_bg #CCD0DA
+set \$theme_active_fg #20222C
+set \$theme_inactive_bg #E6E9EF
+set \$theme_inactive_fg #5C5F77
+set \$theme_urgent_bg #D20F39
+set \$theme_urgent_fg #FFFFFF
 EOF
 
+    # i3status プロセスを更新
+    pkill -x i3status 2>/dev/null || true
+
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
-        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "☀️ システムテーマ変更" "全アプリケーションへライトモードを適用しました"
+        notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "☀️ システムテーマ変更" "ライトモードを適用しました"
     else
         echo "✅ 全アプリケーションへライトモードを適用しました"
     fi
@@ -185,7 +191,7 @@ esac
 # GUI (Rofi) または CLI メニュー表示
 if command -v rofi &>/dev/null && [ -n "$DISPLAY" ]; then
     CURRENT=$(get_current_theme)
-    CHOICE=$(echo -e "🌙 ダークモード (Dark Theme)\n☀️ ライトモード (Light Theme)\n🔄 ダーク/ライト切り替え (Toggle)" | rofi -dmenu -i -p "🎨 システム全般テーマ設定 (現在: $CURRENT)")
+    CHOICE=$(echo -e "🌙 ダークモード (Dark Theme)\n☀️ ライトモード (Light Theme)\n🔄 ダーク/ライト切り替え (Toggle)" | rofi -dmenu -i -p "🎨 テーマ設定 (現在: $CURRENT)")
     
     case "$CHOICE" in
         *"ダークモード"*)
