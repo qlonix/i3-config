@@ -3,7 +3,7 @@
 # ==========================================
 # i3wm システム全体 ライト/ダークテーマ設定ツール
 # 動作中の全アプリケーション(GTK3/4, D-Bus Portal, Qt, Electron)のテーマを切替。
-# ステータスバーは常に視認性の高いダークテーマ(#181825)を維持し、文字と同化させません。
+# ステータスバーは常に視認性の高いダークテーマ(#181825)を維持し、エラーなく滑らかに切替します。
 # ==========================================
 
 THEME_FILE="$HOME/.config/i3/current_theme"
@@ -14,6 +14,12 @@ get_current_theme() {
         cat "$THEME_FILE"
     else
         echo "dark"
+    fi
+}
+
+reload_i3() {
+    if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
+        i3-msg restart >/dev/null 2>&1 || true
     fi
 }
 
@@ -90,8 +96,6 @@ set \$theme_urgent_bg #F38BA8
 set \$theme_urgent_fg #11111B
 EOF
 
-    pkill -x i3status 2>/dev/null || true
-
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
         notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "🌙 システムテーマ変更" "アプリ全体にダークモードを適用しました"
     else
@@ -122,8 +126,6 @@ set \$theme_urgent_bg #D20F39
 set \$theme_urgent_fg #FFFFFF
 EOF
 
-    pkill -x i3status 2>/dev/null || true
-
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
         notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "☀️ システムテーマ変更" "アプリ全体にライトモードを適用しました"
     else
@@ -138,9 +140,7 @@ toggle_theme() {
     else
         apply_dark_theme
     fi
-    if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
-        i3-msg restart
-    fi
+    reload_i3
 }
 
 # 引数別処理
@@ -156,16 +156,12 @@ case "$1" in
         ;;
     dark)
         apply_dark_theme
-        if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
-            i3-msg restart
-        fi
+        reload_i3
         exit 0
         ;;
     light)
         apply_light_theme
-        if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
-            i3-msg restart
-        fi
+        reload_i3
         exit 0
         ;;
     toggle)
@@ -182,11 +178,11 @@ if command -v rofi &>/dev/null && [ -n "$DISPLAY" ]; then
     case "$CHOICE" in
         *"ダークモード"*)
             apply_dark_theme
-            i3-msg restart
+            reload_i3
             ;;
         *"ライトモード"*)
             apply_light_theme
-            i3-msg restart
+            reload_i3
             ;;
         *"切り替え"*)
             toggle_theme
@@ -206,8 +202,8 @@ else
     echo "3) 🔄 モード切替 (Toggle)"
     read -p "選択してください [1-3]: " num
     case "$num" in
-        1) apply_dark_theme; command -v i3-msg &>/dev/null && i3-msg restart ;;
-        2) apply_light_theme; command -v i3-msg &>/dev/null && i3-msg restart ;;
+        1) apply_dark_theme; reload_i3 ;;
+        2) apply_light_theme; reload_i3 ;;
         3) toggle_theme ;;
     esac
 fi
