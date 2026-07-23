@@ -163,6 +163,9 @@ exec_always --no-startup-id ~/.config/i3/i3-keyboard-setup.sh apply
 # 通知デーモンの起動 (OSDポップアップ用)
 exec --no-startup-id dunst
 
+# XSETTINGS デーモンの起動 (アプリテーマリアルタイム同期用)
+exec --no-startup-id xsettingsd
+
 # 壁紙の設定 (fehが必要)
 # exec_always --no-startup-id feh --bg-scale ~/Pictures/wallpaper.jpg
 
