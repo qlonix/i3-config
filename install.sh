@@ -51,10 +51,24 @@ curl -fsSL "${RAW_URL}/config" -o "$I3_DIR/config"
 echo "⬇️ Downloading i3 cheat sheet..."
 curl -fsSL "${RAW_URL}/i3-cheatsheet.html" -o "$I3_DIR/i3-cheatsheet.html"
 
+echo "⬇️ Downloading update script..."
+curl -fsSL "${RAW_URL}/update.sh" -o "$I3_DIR/update.sh"
+chmod +x "$I3_DIR/update.sh"
+
+# コマンドとしてどこからでも呼び出せるように ~/.local/bin にシンボリックリンクを作成
+LOCAL_BIN="$HOME/.local/bin"
+if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
+    ln -sf "$I3_DIR/update.sh" "$LOCAL_BIN/i3-config-update" 2>/dev/null || true
+fi
+
 # ==========================================
 # 4. 完了処理
 # ==========================================
 echo "✅ Setup Complete!"
+echo "💡 今後、設定を最新にアップデートしたい場合は以下の方法が使えます:"
+echo "   ・ショートカット: Super + Shift + u"
+echo "   ・コマンド: i3-config-update または ~/.config/i3/update.sh"
+echo "   ・ワンライナー: curl -fsSL ${RAW_URL}/update.sh | bash"
 
 # i3が既に起動している場合は、設定を再読み込みする
 if command -v i3-msg &> /dev/null && pgrep -x i3 > /dev/null; then

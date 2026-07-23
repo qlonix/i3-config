@@ -54,12 +54,40 @@ chmod +x install.sh
 
 ---
 
+## 🔄 設定ファイルのアップデート方法
+
+GitHub上でリポジトリが更新された際、以下のいずれかの方法で手元の環境を簡単にアップデートできます。
+
+### 方法 1: ショートカットキーで更新（推奨）
+i3起動中に `Super + Shift + u` を押すだけで、GitHubから最新設定を取得して自動で再読み込み（リロード）されます。
+
+### 方法 2: コマンドラインから更新
+ターミナルから以下のいずれかのコマンドを実行します：
+
+```bash
+# i3-config-update コマンド（~/.local/bin にパスが通っている場合）
+i3-config-update
+
+# またはスクリプトを直接実行
+~/.config/i3/update.sh
+```
+
+### 方法 3: ワンライナーで更新
+リポジトリを手元に保持していない場合でも、ワンライナーで最新化が可能です。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/qlonix/i3-config/main/update.sh | bash
+```
+
+---
+
 ## 📂 ファイル構成
 
 | ファイル名 | 説明 |
 | :--- | :--- |
 | `config` | i3wm のメイン設定ファイル (`~/.config/i3/config` へ配置) |
 | `install.sh` | 依存関係のインストールおよび設定配置を行う自動スクリプト |
+| `update.sh` | GitHub上の最新設定を取得・適用しi3をリロードするアップデートスクリプト |
 | `i3-cheatsheet.html` | キーバインドを一覧確認できるHTMLチートシート |
 | `.agent/RULES.md` | 本プロジェクトの開発・コーディングルール |
 
@@ -76,6 +104,7 @@ chmod +x install.sh
 | `Super + Shift + h/j/k/l` | ウィンドウの移動 |
 | `Super + Shift + c` | i3設定ファイルの再読み込み |
 | `Super + Shift + r` | i3の再起動 |
+| `Super + Shift + u` | GitHubから最新設定を取得してアップデート |
 
 ---
 

@@ -31,9 +31,10 @@ bindsym $mod+Shift+q kill
 # アプリケーションランチャーを起動
 bindsym $mod+d exec --no-startup-id $menu
 
-# i3の再読み込み / 再起動 / 終了
+# i3の再読み込み / 再起動 / 終了 / 設定アップデート
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
+bindsym $mod+Shift+u exec --no-startup-id ~/.config/i3/update.sh
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'i3を終了しますか？' -B 'はい' 'i3-msg exit'"
 
 # --- ウィンドウのフォーカス移動 ---
