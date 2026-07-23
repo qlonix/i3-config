@@ -82,6 +82,13 @@ if command -v rofi &> /dev/null && [ -n "$DISPLAY" ]; then
             apply_setting "setxkbmap -option" "キーボード設定の初期化"
             ;;
     esac
+elif [ ! -t 0 ] && [ -n "$DISPLAY" ]; then
+    # rofi がなく GUI ショートカットから端末なしで起動された場合、ターミナルを開く
+    if command -v i3-sensible-terminal &> /dev/null; then
+        exec i3-sensible-terminal -e "$0"
+    elif command -v x-terminal-emulator &> /dev/null; then
+        exec x-terminal-emulator -e "$0"
+    fi
 else
     echo "⌨️ i3wm キーボード設定ツール"
     echo "----------------------------"
