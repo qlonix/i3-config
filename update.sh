@@ -78,6 +78,7 @@ chmod +x "$I3_DIR"/*.sh 2>/dev/null || true
 LOCAL_BIN="$HOME/.local/bin"
 if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/update.sh" "$LOCAL_BIN/i3-config-update" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-default-apps.sh" "$LOCAL_BIN/i3-default-apps" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-keyboard-setup.sh" "$LOCAL_BIN/i3-keyboard-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-theme-setup.sh" "$LOCAL_BIN/i3-theme-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-cheatsheet.sh" "$LOCAL_BIN/i3-cheatsheet" 2>/dev/null || true

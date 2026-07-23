@@ -42,6 +42,7 @@ render_cheatsheet() {
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + c" "i3設定ファイルの再読み込み"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + r" "i3wm の再起動 (Restart)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + u" "GitHubから最新設定へアップデート"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + a" "デフォルトアプリ設定 (ブラウザ/エディタ等)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + k" "キーボード設定 (Ctrl/Caps入替・JP/US配列)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + t" "システムテーマ切替 (ダーク/ライト)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + ?" "このチートシートを表示"
