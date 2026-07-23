@@ -3,17 +3,27 @@
 # ==========================================
 # i3wm システム全体 ライト/ダークテーマ設定ツール
 # 動作中の全アプリケーション(GTK3/4, D-Bus Portal, Qt, Electron, i3bar, i3status)へ
-# 高コントラストな配色設定(ダーク/ライト)を一括適用・同期します
+# 完全分離された高コントラスト設定(ダーク/ライト)を一括適用・同期します
 # ==========================================
 
 THEME_FILE="$HOME/.config/i3/current_theme"
 I3_DIR="$HOME/.config/i3"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
 
 get_current_theme() {
     if [ -f "$THEME_FILE" ]; then
         cat "$THEME_FILE"
     else
         echo "dark"
+    fi
+}
+
+find_config() {
+    local name="$1"
+    if [ -f "$I3_DIR/$name" ]; then
+        echo "$I3_DIR/$name"
+    elif [ -f "$SCRIPT_DIR/$name" ]; then
+        echo "$SCRIPT_DIR/$name"
     fi
 }
 
@@ -70,17 +80,17 @@ EOF
 apply_dark_theme() {
     echo "dark" > "$THEME_FILE"
     
-    # システム環境設定の適用 (Dark)
+    # 1. システム環境設定の適用 (Dark)
     apply_system_theme "Adwaita-dark" 1 "prefer-dark" 1
 
-    # i3status.conf (ダークモード高コントラストカラー)
-    if [ -f "$I3_DIR/i3status.conf" ]; then
-        sed -i 's/color_good = .*/color_good = "#A6E3A1"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_degraded = .*/color_degraded = "#F9E2AF"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_bad = .*/color_bad = "#F38BA8"/' "$I3_DIR/i3status.conf"
+    # 2. i3status.conf (専用ダークモード設定ファイルのロード)
+    local dark_conf=$(find_config "i3status-dark.conf")
+    mkdir -p "$I3_DIR"
+    if [ -n "$dark_conf" ]; then
+        cp "$dark_conf" "$I3_DIR/i3status.conf"
     fi
 
-    # i3 config テーマ定義の書き換え (Dark)
+    # 3. i3 config テーマ定義の書き換え (Dark)
     cat <<EOF > "$I3_DIR/theme.conf"
 # i3wm Dark Theme Colors
 set \$theme_bg #181825
@@ -96,7 +106,7 @@ set \$theme_urgent_bg #F38BA8
 set \$theme_urgent_fg #11111B
 EOF
 
-    # i3status プロセスを更新
+    # 4. i3status プロセスを再起動して設定を適用
     pkill -x i3status 2>/dev/null || true
 
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
@@ -109,33 +119,33 @@ EOF
 apply_light_theme() {
     echo "light" > "$THEME_FILE"
     
-    # システム環境設定の適用 (Light)
+    # 1. システム環境設定の適用 (Light)
     apply_system_theme "Adwaita" 0 "prefer-light" 2
 
-    # i3status.conf (ライトモード高コントラストカラー)
-    if [ -f "$I3_DIR/i3status.conf" ]; then
-        sed -i 's/color_good = .*/color_good = "#188038"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_degraded = .*/color_degraded = "#B06000"/' "$I3_DIR/i3status.conf"
-        sed -i 's/color_bad = .*/color_bad = "#D20F39"/' "$I3_DIR/i3status.conf"
+    # 2. i3status.conf (専用ライトモード高コントラスト設定ファイルのロード)
+    local light_conf=$(find_config "i3status-light.conf")
+    mkdir -p "$I3_DIR"
+    if [ -n "$light_conf" ]; then
+        cp "$light_conf" "$I3_DIR/i3status.conf"
     fi
 
-    # i3 config テーマ定義の書き換え (Light)
+    # 3. i3 config テーマ定義の書き換え (Light: 漆黒テキストで視認性を確保)
     cat <<EOF > "$I3_DIR/theme.conf"
 # i3wm Light Theme Colors
 set \$theme_bg #E6E9EF
-set \$theme_fg #20222C
+set \$theme_fg #111827
 set \$theme_separator #9CA0B0
 set \$theme_focused_bg #1E66F5
 set \$theme_focused_fg #FFFFFF
 set \$theme_active_bg #CCD0DA
-set \$theme_active_fg #20222C
+set \$theme_active_fg #111827
 set \$theme_inactive_bg #E6E9EF
-set \$theme_inactive_fg #5C5F77
+set \$theme_inactive_fg #4B5563
 set \$theme_urgent_bg #D20F39
 set \$theme_urgent_fg #FFFFFF
 EOF
 
-    # i3status プロセスを更新
+    # 4. i3status プロセスを再起動して設定を適用
     pkill -x i3status 2>/dev/null || true
 
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
