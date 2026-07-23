@@ -2,24 +2,17 @@
 
 # ==========================================
 # i3wm システム全体 ライト/ダークテーマ設定ツール
-# 動作中の全アプリケーション(GTK3/4, D-Bus Portal, Qt, Electron)のテーマを切替。
-# ステータスバーは常に視認性の高いダークテーマ(#181825)を維持し、エラーなく滑らかに切替します。
+# 動作中の全アプリケーション(GTK3/4, D-Bus Portal, Qt, Electron)のテーマを一括切り替え
+# ステータスバーの安定表示を最優先し、画面下の表示を壊さずアプリテーマをリアルタイム同期します
 # ==========================================
 
 THEME_FILE="$HOME/.config/i3/current_theme"
-I3_DIR="$HOME/.config/i3"
 
 get_current_theme() {
     if [ -f "$THEME_FILE" ]; then
         cat "$THEME_FILE"
     else
         echo "dark"
-    fi
-}
-
-reload_i3() {
-    if command -v i3-msg &>/dev/null && pgrep -x i3 &>/dev/null; then
-        i3-msg restart >/dev/null 2>&1 || true
     fi
 }
 
@@ -75,61 +68,23 @@ EOF
 
 apply_dark_theme() {
     echo "dark" > "$THEME_FILE"
-    
-    # 全アプリケーションへのダークモード適用
     apply_system_theme "Adwaita-dark" 1 "prefer-dark" 1
-
-    # i3バーテーマ設定 (ダークオブシディアン)
-    mkdir -p "$I3_DIR"
-    cat <<EOF > "$I3_DIR/theme.conf"
-# i3wm Theme Colors (Sleek Dark Obsidian)
-set \$theme_bg #181825
-set \$theme_fg #CDD6F4
-set \$theme_separator #45475A
-set \$theme_focused_bg #89B4FA
-set \$theme_focused_fg #11111B
-set \$theme_active_bg #45475A
-set \$theme_active_fg #CDD6F4
-set \$theme_inactive_bg #181825
-set \$theme_inactive_fg #A6ADC8
-set \$theme_urgent_bg #F38BA8
-set \$theme_urgent_fg #11111B
-EOF
 
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
         notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "🌙 システムテーマ変更" "アプリ全体にダークモードを適用しました"
     else
-        echo "✅ 全アプリケーションへダークモードを適用しました"
+        echo "✅ アプリ全体にダークモードを適用しました"
     fi
 }
 
 apply_light_theme() {
     echo "light" > "$THEME_FILE"
-    
-    # 全アプリケーションへのライトモード適用
     apply_system_theme "Adwaita" 0 "prefer-light" 2
-
-    # i3バーテーマ設定 (バー自体は文字視認性の高いダークオブシディアンを維持)
-    mkdir -p "$I3_DIR"
-    cat <<EOF > "$I3_DIR/theme.conf"
-# i3wm Theme Colors (Sleek Dark Obsidian Bar)
-set \$theme_bg #181825
-set \$theme_fg #CDD6F4
-set \$theme_separator #45475A
-set \$theme_focused_bg #1E66F5
-set \$theme_focused_fg #FFFFFF
-set \$theme_active_bg #45475A
-set \$theme_active_fg #CDD6F4
-set \$theme_inactive_bg #181825
-set \$theme_inactive_fg #A6ADC8
-set \$theme_urgent_bg #D20F39
-set \$theme_urgent_fg #FFFFFF
-EOF
 
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
         notify-send -h "string:x-dunst-stack-tag:theme" -t 1500 "☀️ システムテーマ変更" "アプリ全体にライトモードを適用しました"
     else
-        echo "✅ 全アプリケーションへライトモードを適用しました"
+        echo "✅ アプリ全体にライトモードを適用しました"
     fi
 }
 
@@ -140,7 +95,6 @@ toggle_theme() {
     else
         apply_dark_theme
     fi
-    reload_i3
 }
 
 # 引数別処理
@@ -156,12 +110,10 @@ case "$1" in
         ;;
     dark)
         apply_dark_theme
-        reload_i3
         exit 0
         ;;
     light)
         apply_light_theme
-        reload_i3
         exit 0
         ;;
     toggle)
@@ -178,11 +130,9 @@ if command -v rofi &>/dev/null && [ -n "$DISPLAY" ]; then
     case "$CHOICE" in
         *"ダークモード"*)
             apply_dark_theme
-            reload_i3
             ;;
         *"ライトモード"*)
             apply_light_theme
-            reload_i3
             ;;
         *"切り替え"*)
             toggle_theme
@@ -202,8 +152,8 @@ else
     echo "3) 🔄 モード切替 (Toggle)"
     read -p "選択してください [1-3]: " num
     case "$num" in
-        1) apply_dark_theme; reload_i3 ;;
-        2) apply_light_theme; reload_i3 ;;
+        1) apply_dark_theme ;;
+        2) apply_light_theme ;;
         3) toggle_theme ;;
     esac
 fi

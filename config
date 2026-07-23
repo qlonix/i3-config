@@ -31,9 +31,6 @@ bindsym $mod+Shift+q kill
 # アプリケーションランチャーを起動
 bindsym $mod+d exec --no-startup-id $menu
 
-# --- テーマ設定 ---
-include ~/.config/i3/theme.conf
-
 # i3の再読み込み / 再起動 / 終了 / 設定アップデート / チートシート表示 / テーマ設定
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
@@ -141,17 +138,17 @@ bar {
         position bottom
         font pango:DejaVu Sans Mono, Noto Sans CJK JP 10
 
-        # バーのカラースキーム (テーマ変数連動)
+        # バーのカラースキーム (最高視認性のモダンスタイル)
         colors {
-            background $theme_bg
-            statusline $theme_fg
-            separator  $theme_separator
+            background #1E1E2E
+            statusline #F8F8F2
+            separator  #6272A4
 
-            # Type             Border            Background         Text
-            focused_workspace  $theme_focused_bg  $theme_focused_bg  $theme_focused_fg
-            active_workspace   $theme_active_bg   $theme_active_bg   $theme_active_fg
-            inactive_workspace $theme_inactive_bg $theme_inactive_bg $theme_inactive_fg
-            urgent_workspace   $theme_urgent_bg   $theme_urgent_bg   $theme_urgent_fg
+            # Type             Border  Background Text
+            focused_workspace  #89B4FA #89B4FA    #1E1E2E
+            active_workspace   #45475A #45475A    #F8F8F2
+            inactive_workspace #1E1E2E #1E1E2E    #A6ADC8
+            urgent_workspace   #F38BA8 #F38BA8    #1E1E2E
         }
 }
 
