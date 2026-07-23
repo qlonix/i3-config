@@ -19,13 +19,13 @@ echo "🚀 Starting i3wm Ultimate Setup..."
 if command -v apt &> /dev/null; then
     echo "📦 Detected Debian/Ubuntu (apt). Installing packages..."
     sudo apt update
-    sudo apt install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl x11-xserver-utils libnotify-bin
+    sudo apt install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl x11-xserver-utils libnotify-bin dunst
 elif command -v pacman &> /dev/null; then
     echo "📦 Detected Arch Linux (pacman). Installing packages..."
-    sudo pacman -Syu --noconfirm i3-wm rofi picom feh brightnessctl pavucontrol pulseaudio curl xorg-setxkbmap libnotify
+    sudo pacman -Syu --noconfirm i3-wm rofi picom feh brightnessctl pavucontrol pulseaudio curl xorg-setxkbmap libnotify dunst
 elif command -v dnf &> /dev/null; then
     echo "📦 Detected Fedora/RHEL (dnf). Installing packages..."
-    sudo dnf install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl setxkbmap libnotify
+    sudo dnf install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl setxkbmap libnotify dunst
 else
     echo "⚠️ Unsupported package manager. Please install dependencies manually."
 fi
