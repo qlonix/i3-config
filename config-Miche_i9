@@ -1,0 +1,157 @@
+# ==========================================
+# 究極に使いやすい i3wm 設定ファイル
+# ==========================================
+
+# --- 基本設定 ---
+# Modキーを Windowsキー (Super) に設定 (Altキーは他のアプリと競合するため)
+set $mod Mod4
+
+# フォント設定 (お好みのフォントに変更してください)
+font pango:DejaVu Sans Mono, Noto Sans CJK JP 10
+
+# ターミナルとランチャーの定義
+set $term i3-sensible-terminal
+# より使いやすい rofi を推奨 (インストールが必要)
+set $menu rofi -show drun -show-icons
+
+# --- ウィンドウの見た目 ---
+# ウィンドウのタイトルバーを消し、ボーダーを2pxにする (スッキリとした見た目)
+for_window [class="^.*"] border pixel 2
+# ウィンドウ間の隙間 (Gaps) を設定 (i3-gapsが標準統合されています)
+gaps inner 8
+gaps outer 2
+
+# --- 基本的なキーバインド ---
+# ターミナルを起動
+bindsym $mod+Return exec --no-startup-id $term
+
+# ウィンドウを閉じる
+bindsym $mod+Shift+q kill
+
+# アプリケーションランチャーを起動
+bindsym $mod+d exec --no-startup-id $menu
+
+# i3の再読み込み / 再起動 / 終了
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'i3を終了しますか？' -B 'はい' 'i3-msg exit'"
+
+# --- ウィンドウのフォーカス移動 ---
+# Vimキーバインド (h, j, k, l) で移動
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# 矢印キーでも移動可能 (初心者にも優しい設計)
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# --- ウィンドウの移動 ---
+# Vimキーバインドでウィンドウ自体を移動
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# 矢印キーでもウィンドウを移動
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# --- レイアウト操作 ---
+# 水平分割 / 垂直分割
+bindsym $mod+b split h
+bindsym $mod+v split v
+
+# フルスクリーン切り替え
+bindsym $mod+f fullscreen toggle
+
+# レイアウトの切り替え (スタック / タブ / タイリング)
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# タイリングとフローティング(浮きウィンドウ)の切り替え
+bindsym $mod+Shift+space floating toggle
+
+# フォーカスの切り替え (タイリング ↔ フローティング)
+bindsym $mod+space focus mode_toggle
+
+# --- ワークスペース ---
+# ワークスペース名を変数で定義
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+# ワークスペースへの移動
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+bindsym $mod+0 workspace number $ws10
+
+# ウィンドウを特定のワークスペースへ移動
+bindsym $mod+Shift+1 move container to workspace number $ws1
+bindsym $mod+Shift+2 move container to workspace number $ws2
+bindsym $mod+Shift+3 move container to workspace number $ws3
+bindsym $mod+Shift+4 move container to workspace number $ws4
+bindsym $mod+Shift+5 move container to workspace number $ws5
+bindsym $mod+Shift+6 move container to workspace number $ws6
+bindsym $mod+Shift+7 move container to workspace number $ws7
+bindsym $mod+Shift+8 move container to workspace number $ws8
+bindsym $mod+Shift+9 move container to workspace number $ws9
+bindsym $mod+Shift+0 move container to workspace number $ws10
+
+# --- メディアキー・システムコントロール ---
+# 音量調整 (PulseAudio/PipeWire用)
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+# 画面の明るさ調整 (brightnessctlが必要)
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 5%-
+
+# --- ステータスバー ---
+bar {
+        status_command i3status
+        position bottom
+        # バーのカラースキーム (視認性の高いダークテーマ)
+        colors {
+            background #282A36
+            statusline #F8F8F2
+            separator  #44475A
+
+            # Type             Border  Background Text
+            focused_workspace  #6272A4 #6272A4    #F8F8F2
+            active_workspace   #44475A #44475A    #F8F8F2
+            inactive_workspace #282A36 #282A36    #BFBFBF
+            urgent_workspace   #FF5555 #FF5555    #F8F8F2
+        }
+}
+
+# --- 自動起動 (Autostart) ---
+# 壁紙の設定 (fehが必要)
+# exec_always --no-startup-id feh --bg-scale ~/Pictures/wallpaper.jpg
+
+# コンポジタ (透明化や影の描画、チラつき防止 / picomが必要)
+# exec_always --no-startup-id picom -b
+
+# ネットワークマネージャーのアプレット
+exec --no-startup-id nm-applet
