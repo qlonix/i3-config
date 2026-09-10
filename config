@@ -16,9 +16,20 @@ set $term i3-sensible-terminal
 set $menu rofi -show drun -show-icons
 
 # --- ウィンドウの見た目 ---
-# ウィンドウのタイトルバーを消し、ボーダーを2pxにする (スッキリとした見た目)
-for_window [class="^.*"] border pixel 2
-# ウィンドウ間の隙間 (Gaps) を設定 (i3-gapsが標準統合されています)
+# タイリングウィンドウのデフォルトボーダー (タイトルバー非表示、スッキリとした2px)
+default_border pixel 2
+
+# フローティングウィンドウのデフォルトボーダー (境界を明確にする太めの4px)
+default_floating_border pixel 4
+
+# 新規ウィンドウへの初期ボーダー設定
+for_window [tiling] border pixel 2
+for_window [floating] border pixel 4
+
+# フローティングウィンドウの操作 ($mod + 左ドラッグで移動、$mod + 右ドラッグでリサイズ)
+floating_modifier $mod
+
+# ウィンドウ間の隙間 (Gaps) を設定 (大画面デフォルト。i3-display-setupで自動最適化)
 gaps inner 8
 gaps outer 2
 
@@ -39,6 +50,7 @@ bindsym $mod+Shift+u exec --no-startup-id ~/.config/i3/update.sh
 bindsym $mod+Control+a exec --no-startup-id ~/.config/i3/i3-default-apps.sh
 bindsym $mod+Control+k exec --no-startup-id ~/.config/i3/i3-keyboard-setup.sh
 bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
+bindsym $mod+Control+s exec --no-startup-id ~/.config/i3/i3-display-setup.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'i3を終了しますか？' -B 'はい' 'i3-msg exit'"
 
@@ -82,7 +94,8 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
 # タイリングとフローティング(浮きウィンドウ)の切り替え
-bindsym $mod+Shift+space floating toggle
+# 切り替え時にタイリングは2px、フローティングは4pxにボーダー幅を自動最適化 (タイルのフチが太くなる現象を防止)
+bindsym $mod+Shift+space floating toggle; [tiling] border pixel 2; [floating] border pixel 4
 
 # フォーカスの切り替え (タイリング ↔ フローティング)
 bindsym $mod+space focus mode_toggle
@@ -136,9 +149,9 @@ bindsym XF86MonBrightnessDown exec --no-startup-id ~/.config/i3/i3-media-control
 
 # --- ステータスバー ---
 bar {
-        status_command i3status -c ~/.config/i3/i3status.conf
+        status_command i3status -c ~/.config/i3/i3status-active.conf
         position bottom
-        font pango:DejaVu Sans Mono, Noto Sans CJK JP 10
+        font pango:DejaVu Sans Mono, Noto Sans CJK JP 9.5
 
         # バーのカラースキーム (最高視認性のモダンスタイル)
         colors {
@@ -155,9 +168,10 @@ bar {
 }
 
 # --- 自動起動 (Autostart) ---
-# 保存されたテーマ・キーボードレイアウト(Ctrl/Caps入れ替え等)を適用
+# 保存されたテーマ・キーボードレイアウト(Ctrl/Caps入れ替え等)・画面最適化を適用
 exec_always --no-startup-id ~/.config/i3/i3-theme-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-keyboard-setup.sh apply
+exec_always --no-startup-id ~/.config/i3/i3-display-setup.sh apply
 
 # 通知デーモンの起動 (OSDポップアップ用)
 exec --no-startup-id dunst
