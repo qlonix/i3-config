@@ -173,6 +173,9 @@ exec_always --no-startup-id ~/.config/i3/i3-theme-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-keyboard-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-display-setup.sh apply
 
+# システムアップデートの定期チェックデーモン
+exec --no-startup-id ~/.config/i3/i3-update-checker.sh
+
 # 通知デーモンの起動 (OSDポップアップ用)
 exec --no-startup-id dunst
 
