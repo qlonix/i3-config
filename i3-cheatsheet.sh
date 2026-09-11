@@ -46,7 +46,7 @@ render_cheatsheet() {
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + k" "キーボード設定 (Ctrl/Caps入替・JP/US配列)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + t" "システムテーマ切替 (ダーク/ライト)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + ?" "このチートシートを表示"
-    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + e" "i3wm 終了メニュー"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + e" "システム電源メニュー (スリープ/終了等)"
     echo ""
 
     echo -e "${GREEN}${BOLD}🪟 フォーカス & ウィンドウ移動 (Focus & Move)${RESET}"

@@ -52,7 +52,7 @@ bindsym $mod+Control+k exec --no-startup-id ~/.config/i3/i3-keyboard-setup.sh
 bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
 bindsym $mod+Control+s exec --no-startup-id ~/.config/i3/i3-display-setup.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'i3を終了しますか？' -B 'はい' 'i3-msg exit'"
+bindsym $mod+Shift+e exec --no-startup-id ~/.config/i3/i3-sysmenu.sh
 
 # --- ウィンドウのフォーカス移動 ---
 # Vimキーバインド (h, j, k, l) で移動
