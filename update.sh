@@ -86,6 +86,7 @@ if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/i3-default-apps.sh" "$LOCAL_BIN/i3-default-apps" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-keyboard-setup.sh" "$LOCAL_BIN/i3-keyboard-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-screenshot.sh" "$LOCAL_BIN/i3-screenshot" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-touchpad-setup.sh" "$LOCAL_BIN/i3-touchpad-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-display-setup.sh" "$LOCAL_BIN/i3-display-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-power-setup.sh" "$LOCAL_BIN/i3-power-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-sysmenu.sh" "$LOCAL_BIN/i3-sysmenu" 2>/dev/null || true
