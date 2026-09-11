@@ -147,6 +147,14 @@ bindsym XF86AudioMute exec --no-startup-id ~/.config/i3/i3-media-control.sh vol-
 bindsym XF86MonBrightnessUp exec --no-startup-id ~/.config/i3/i3-media-control.sh bright-up
 bindsym XF86MonBrightnessDown exec --no-startup-id ~/.config/i3/i3-media-control.sh bright-down
 
+# --- スクリーンショット (PrintScreen) ---
+# PrintScreenキーで画面全体を撮影
+bindsym Print exec --no-startup-id ~/.config/i3/i3-screenshot.sh full
+# Shift + PrintScreen で範囲選択して撮影
+bindsym Shift+Print exec --no-startup-id ~/.config/i3/i3-screenshot.sh select
+# Mod + PrintScreen でアクティブウィンドウのみ撮影
+bindsym $mod+Print exec --no-startup-id ~/.config/i3/i3-screenshot.sh window
+
 # --- ステータスバー ---
 bar {
         status_command i3status -c ~/.config/i3/i3status-active.conf
