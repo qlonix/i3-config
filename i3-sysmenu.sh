@@ -27,12 +27,23 @@ else
     esac
 fi
 
+# 電源設定の読み込み
+SLEEP_CMD="systemctl suspend"
+if [ -f "$HOME/.config/i3/power.conf" ]; then
+    . "$HOME/.config/i3/power.conf"
+    if [ "$SLEEP_MODE" = "hybrid-suspend" ]; then
+        SLEEP_CMD="systemctl hybrid-suspend"
+    elif [ "$SLEEP_MODE" = "suspend-then-hibernate" ]; then
+        SLEEP_CMD="systemctl suspend-then-hibernate"
+    fi
+fi
+
 if [[ "$chosen" == *"Poweroff"* ]]; then
     systemctl poweroff
 elif [[ "$chosen" == *"Reboot"* ]]; then
     systemctl reboot
 elif [[ "$chosen" == *"Suspend"* ]]; then
-    systemctl suspend
+    eval "$SLEEP_CMD"
 elif [[ "$chosen" == *"Hibernate"* ]]; then
     systemctl hibernate
 elif [[ "$chosen" == *"Logout"* ]]; then

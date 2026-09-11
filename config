@@ -51,6 +51,7 @@ bindsym $mod+Control+a exec --no-startup-id ~/.config/i3/i3-default-apps.sh
 bindsym $mod+Control+k exec --no-startup-id ~/.config/i3/i3-keyboard-setup.sh
 bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
 bindsym $mod+Control+s exec --no-startup-id ~/.config/i3/i3-display-setup.sh
+bindsym $mod+Control+p exec --no-startup-id ~/.config/i3/i3-power-setup.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
 bindsym $mod+Shift+e exec --no-startup-id ~/.config/i3/i3-sysmenu.sh
 
@@ -186,6 +187,9 @@ exec --no-startup-id ~/.config/i3/i3-update-checker.sh
 
 # 通知デーモンの起動 (OSDポップアップ用)
 exec --no-startup-id dunst
+
+# 電源管理デーモン (画面消灯・スリープ時間管理・バッテリー輝度調整等)
+exec --no-startup-id type xfce4-power-manager >/dev/null 2>&1 && xfce4-power-manager
 
 # XSETTINGS デーモンの起動 (アプリテーマリアルタイム同期用)
 exec --no-startup-id xsettingsd

@@ -45,6 +45,8 @@ render_cheatsheet() {
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + a" "デフォルトアプリ設定 (ブラウザ/エディタ等)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + k" "キーボード設定 (Ctrl/Caps入替・JP/US配列)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + t" "システムテーマ切替 (ダーク/ライト)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + s" "画面最適化 (解像度/Compactモード切替)"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + p" "電源・省電力設定 (スリープ/輝度等)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + ?" "このチートシートを表示"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + e" "システム電源メニュー (スリープ/終了等)"
     echo ""
