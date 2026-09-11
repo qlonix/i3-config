@@ -76,13 +76,38 @@ take_screenshot() {
     return 1
 }
 
+# 撮影前のファイル数を取得 (Flameshot等でファイル名が変わるツール用)
+BEFORE_COUNT=$(find "$SAVE_DIR" -maxdepth 1 -name "*.png" 2>/dev/null | wc -l)
+
 # 撮影実行
 if take_screenshot; then
+    # 撮影後のファイル数を取得
+    AFTER_COUNT=$(find "$SAVE_DIR" -maxdepth 1 -name "*.png" 2>/dev/null | wc -l)
+    
+    # 保存されたファイルを特定
+    LATEST_FILE=""
+    if [ "$AFTER_COUNT" -gt "$BEFORE_COUNT" ]; then
+        # 新しいファイルが生成された場合、一番新しいファイルを取得
+        LATEST_FILE=$(ls -t "$SAVE_DIR"/*.png 2>/dev/null | head -n1)
+    elif [ -f "$FILENAME" ]; then
+        # 生成数は変わらないが指定したファイル名で上書き等された場合
+        LATEST_FILE="$FILENAME"
+    fi
+
+    # クリップボードへのコピー
+    CLIP_MSG=""
+    if [ -n "$LATEST_FILE" ] && [ -f "$LATEST_FILE" ]; then
+        if command -v xclip &>/dev/null; then
+            xclip -selection clipboard -t image/png -i "$LATEST_FILE"
+            CLIP_MSG=" (クリップボードにコピー済)"
+        else
+            CLIP_MSG="\n※xclipをインストールするとクリップボードにも自動コピーされます。"
+        fi
+    fi
+
     # 成功時の通知
     if command -v notify-send &>/dev/null; then
-        # Flameshotは独自の通知があるのでスキップ
-        if ! command -v flameshot &>/dev/null || [ "$MODE" != "select" ]; then
-            notify-send -u normal -i "camera-photo" "スクリーンショット保存" "画像を保存しました:\nPictures/Screenshots/"
-        fi
+        # Flameshotは独自の通知がある場合があるが、クリップボード結果を含めて通知する
+        notify-send -u normal -i "camera-photo" "スクリーンショット保存" "画像を保存しました:$CLIP_MSG\nPictures/Screenshots/"
     fi
 fi
