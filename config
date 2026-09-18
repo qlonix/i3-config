@@ -203,3 +203,6 @@ exec --no-startup-id xsettingsd
 
 # ネットワークマネージャーのアプレット
 exec --no-startup-id nm-applet
+
+# Ulauncherがインストールされている場合、バックグラウンドで起動
+exec --no-startup-id type ulauncher >/dev/null 2>&1 && ulauncher --hide-window
