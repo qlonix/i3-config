@@ -190,7 +190,7 @@ exec --no-startup-id ~/.config/i3/i3-update-checker.sh
 exec --no-startup-id dunst
 
 # 電源管理デーモン (画面消灯・スリープ時間管理・バッテリー輝度調整等)
-exec --no-startup-id type xfce4-power-manager >/dev/null 2>&1 && xfce4-power-manager
+exec --no-startup-id bash -c 'if command -v xfce4-power-manager >/dev/null 2>&1; then xfce4-power-manager; fi'
 
 # XSETTINGS デーモンの起動 (アプリテーマリアルタイム同期用)
 exec --no-startup-id xsettingsd
@@ -205,4 +205,4 @@ exec --no-startup-id xsettingsd
 exec --no-startup-id nm-applet
 
 # Ulauncherがインストールされている場合、バックグラウンドで起動
-exec --no-startup-id type ulauncher >/dev/null 2>&1 && ulauncher --hide-window
+exec --no-startup-id bash -c 'if command -v ulauncher >/dev/null 2>&1; then ulauncher --hide-window; fi'
