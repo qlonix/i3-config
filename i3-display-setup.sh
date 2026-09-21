@@ -77,10 +77,17 @@ EOF
     fi
 
     # モードに応じた i3status 設定ファイルの切替
+    local target_conf="$CONF_DIR/i3status.conf"
     if [ "$effective_mode" = "compact" ] && [ -f "$CONF_DIR/i3status-compact.conf" ]; then
-        ln -sf "$CONF_DIR/i3status-compact.conf" "$CONF_DIR/i3status-active.conf"
-    else
-        ln -sf "$CONF_DIR/i3status.conf" "$CONF_DIR/i3status-active.conf"
+        target_conf="$CONF_DIR/i3status-compact.conf"
+    fi
+
+    local current_target
+    current_target=$(readlink -f "$CONF_DIR/i3status-active.conf" 2>/dev/null || true)
+    local target_changed=0
+    if [ "$current_target" != "$target_conf" ]; then
+        ln -sf "$target_conf" "$CONF_DIR/i3status-active.conf"
+        target_changed=1
     fi
 
     # モードに応じたウィンドウ隙間 (Gaps) の動的最適化
@@ -90,9 +97,12 @@ EOF
         else
             i3-msg -q "gaps inner all set 8; gaps outer all set 2" 2>/dev/null || true
         fi
-        
-        # barの更新
-        pkill -x i3status 2>/dev/null || true
+
+        # 手動切り替え時かつ設定が変更された場合のみ安全に再起動してバーを更新
+        # (起動時・リロード時の apply 実行時は i3 自体が起動処理中のため restart を呼ばない)
+        if [ "$silent" != "silent" ] && [ "$target_changed" -eq 1 ]; then
+            i3-msg restart >/dev/null 2>&1 || true
+        fi
     fi
 
     if [ "$silent" != "silent" ]; then
