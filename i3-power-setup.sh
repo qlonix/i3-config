@@ -38,15 +38,20 @@ apply_settings() {
         xset -dpms
     fi
 
-    # 3. xfce4-power-manager が起動している場合、蓋閉じ処理を systemd-logind に委譲
+    # 3. xfce4-power-manager の設定 (蓋閉じ処理委譲 & ロック重複エラー防止)
     if command -v xfconf-query &>/dev/null && pgrep -x xfce4-power-manager >/dev/null 2>&1; then
         xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -s true --create -t bool 2>/dev/null || true
+        xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false --create -t bool 2>/dev/null || true
     fi
 
     # 4. xss-lock デーモンが動いていなければ起動
     if command -v xss-lock &>/dev/null && command -v i3lock &>/dev/null; then
         if ! pgrep -x xss-lock >/dev/null; then
-            xss-lock --transfer-sleep-lock -- i3lock --nofork -c 000000 &
+            LOCK_CMD="$HOME/.config/i3/i3-lock.sh"
+            if [ ! -x "$LOCK_CMD" ]; then
+                LOCK_CMD="i3lock -c 1E1E2E -e"
+            fi
+            xss-lock --transfer-sleep-lock -- "$LOCK_CMD" &
         fi
     fi
 }

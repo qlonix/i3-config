@@ -41,7 +41,11 @@ if [ -f "$HOME/.config/i3/power.conf" ]; then
 fi
 
 if [[ "$chosen" == *"Lock"* ]]; then
-    loginctl lock-session
+    if [ -x "$HOME/.config/i3/i3-lock.sh" ]; then
+        "$HOME/.config/i3/i3-lock.sh"
+    else
+        loginctl lock-session
+    fi
 elif [[ "$chosen" == *"Poweroff"* ]]; then
     systemctl poweroff
 elif [[ "$chosen" == *"Reboot"* ]]; then

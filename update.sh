@@ -89,6 +89,10 @@ if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/i3-touchpad-setup.sh" "$LOCAL_BIN/i3-touchpad-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-display-setup.sh" "$LOCAL_BIN/i3-display-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-power-setup.sh" "$LOCAL_BIN/i3-power-setup" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-wallpaper-setup.sh" "$LOCAL_BIN/i3-wallpaper-setup" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-lock.sh" "$LOCAL_BIN/i3-lock" 2>/dev/null || true
+    ln -sf "$I3_DIR/xflock4.sh" "$LOCAL_BIN/xflock4" 2>/dev/null || true
+    ln -sf "$I3_DIR/cinnamon-screensaver-command.sh" "$LOCAL_BIN/cinnamon-screensaver-command" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-sysmenu.sh" "$LOCAL_BIN/i3-sysmenu" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-theme-setup.sh" "$LOCAL_BIN/i3-theme-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-cheatsheet.sh" "$LOCAL_BIN/i3-cheatsheet" 2>/dev/null || true

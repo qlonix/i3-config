@@ -47,6 +47,7 @@ render_cheatsheet() {
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + t" "システムテーマ切替 (ダーク/ライト)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + s" "画面最適化 (解像度/Compactモード切替)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + p" "電源・省電力・画面ロック設定"
+    printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + w" "壁紙＆ロック画面設定 (ncurses)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Ctrl + l" "画面を即時ロック (Lock)"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + ?" "このチートシートを表示"
     printf "  ${YELLOW}%-28s${RESET} : ${WHITE}%s${RESET}\n" "Super + Shift + e" "システム電源メニュー (ロック/スリープ等)"

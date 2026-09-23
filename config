@@ -52,7 +52,8 @@ bindsym $mod+Control+k exec --no-startup-id ~/.config/i3/i3-keyboard-setup.sh
 bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
 bindsym $mod+Control+s exec --no-startup-id ~/.config/i3/i3-display-setup.sh
 bindsym $mod+Control+p exec --no-startup-id ~/.config/i3/i3-power-setup.sh
-bindsym $mod+Control+l exec --no-startup-id loginctl lock-session
+bindsym $mod+Control+w exec --no-startup-id i3-sensible-terminal -e ~/.config/i3/i3-wallpaper-setup.sh
+bindsym $mod+Control+l exec --no-startup-id ~/.config/i3/i3-lock.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
 bindsym $mod+Shift+e exec --no-startup-id ~/.config/i3/i3-sysmenu.sh
 
@@ -184,9 +185,10 @@ exec_always --no-startup-id ~/.config/i3/i3-keyboard-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-display-setup.sh apply
 exec_always --no-startup-id ~/.config/i3/i3-touchpad-setup.sh
 exec_always --no-startup-id ~/.config/i3/i3-power-setup.sh apply
+exec_always --no-startup-id ~/.config/i3/i3-wallpaper-setup.sh apply
 
 # 画面ロックデーモン (スリープ前 & アイドル時自動ロック)
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork -c 000000
+exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.config/i3/i3-lock.sh
 
 # システムアップデートの定期チェックデーモン
 exec --no-startup-id ~/.config/i3/i3-update-checker.sh
@@ -199,9 +201,6 @@ exec --no-startup-id bash -c 'if command -v xfce4-power-manager >/dev/null 2>&1;
 
 # XSETTINGS デーモンの起動 (アプリテーマリアルタイム同期用)
 exec --no-startup-id xsettingsd
-
-# 壁紙の設定 (fehが必要)
-# exec_always --no-startup-id feh --bg-scale ~/Pictures/wallpaper.jpg
 
 # コンポジタ (透明化や影の描画、チラつき防止 / picomが必要)
 # exec_always --no-startup-id picom -b

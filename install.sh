@@ -19,13 +19,13 @@ echo "🚀 Starting i3wm Ultimate Setup..."
 if command -v apt &> /dev/null; then
     echo "📦 Detected Debian/Ubuntu (apt). Installing packages..."
     sudo apt update
-    sudo apt install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl x11-xserver-utils libnotify-bin dunst xsettingsd i3lock xss-lock
+    sudo apt install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl x11-xserver-utils libnotify-bin dunst xsettingsd i3lock xss-lock dialog python3-pil
 elif command -v pacman &> /dev/null; then
     echo "📦 Detected Arch Linux (pacman). Installing packages..."
-    sudo pacman -Syu --noconfirm i3-wm rofi picom feh brightnessctl pavucontrol pulseaudio curl xorg-setxkbmap libnotify dunst xsettingsd i3lock xss-lock
+    sudo pacman -Syu --noconfirm i3-wm rofi picom feh brightnessctl pavucontrol pulseaudio curl xorg-setxkbmap libnotify dunst xsettingsd i3lock xss-lock dialog python-pillow
 elif command -v dnf &> /dev/null; then
     echo "📦 Detected Fedora/RHEL (dnf). Installing packages..."
-    sudo dnf install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl setxkbmap libnotify dunst xsettingsd i3lock xss-lock
+    sudo dnf install -y i3 rofi picom feh brightnessctl pavucontrol pulseaudio-utils curl setxkbmap libnotify dunst xsettingsd i3lock xss-lock dialog python3-pillow
 else
     echo "⚠️ Unsupported package manager. Please install dependencies manually."
 fi
@@ -70,6 +70,10 @@ if [ -d "$LOCAL_BIN" ] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
     ln -sf "$I3_DIR/i3-touchpad-setup.sh" "$LOCAL_BIN/i3-touchpad-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-display-setup.sh" "$LOCAL_BIN/i3-display-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-power-setup.sh" "$LOCAL_BIN/i3-power-setup" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-wallpaper-setup.sh" "$LOCAL_BIN/i3-wallpaper-setup" 2>/dev/null || true
+    ln -sf "$I3_DIR/i3-lock.sh" "$LOCAL_BIN/i3-lock" 2>/dev/null || true
+    ln -sf "$I3_DIR/xflock4.sh" "$LOCAL_BIN/xflock4" 2>/dev/null || true
+    ln -sf "$I3_DIR/cinnamon-screensaver-command.sh" "$LOCAL_BIN/cinnamon-screensaver-command" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-sysmenu.sh" "$LOCAL_BIN/i3-sysmenu" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-theme-setup.sh" "$LOCAL_BIN/i3-theme-setup" 2>/dev/null || true
     ln -sf "$I3_DIR/i3-cheatsheet.sh" "$LOCAL_BIN/i3-cheatsheet" 2>/dev/null || true
