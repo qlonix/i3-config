@@ -10,14 +10,30 @@ LOCK_IMG="$CONF_DIR/lockscreen.png"
 HELPER_PY="$CONF_DIR/i3-wallpaper-helper.py"
 
 # デフォルト設定値
-DEFAULT_WALLPAPER="/usr/share/backgrounds/linuxmint/default_background.jpg"
-WALLPAPER_PATH="$DEFAULT_WALLPAPER"
+WALLPAPER_PATH=""
 LOCK_STYLE="blur"     # blur / original / color
 BG_COLOR="#1E1E2E"
 
 # 設定ファイルの読み込み
 if [ -f "$WALL_CONF" ]; then
     . "$WALL_CONF"
+fi
+
+# wallpaper.conf に有効な壁紙パスが無い場合、~/.fehbg から現在のデスクトップ壁紙を自動検出
+if [ -z "$WALLPAPER_PATH" ] || [ ! -f "$WALLPAPER_PATH" ]; then
+    if [ -f "$HOME/.fehbg" ]; then
+        feh_img=$(grep -o "'.*'" "$HOME/.fehbg" | tr -d "'" | head -n 1)
+        if [ -n "$feh_img" ] && [ -f "$feh_img" ]; then
+            WALLPAPER_PATH="$feh_img"
+        fi
+    fi
+fi
+
+# それでも見つからない場合のフォールバック (Linux Mint標準壁紙)
+if [ -z "$WALLPAPER_PATH" ] || [ ! -f "$WALLPAPER_PATH" ]; then
+    if [ -f "/usr/share/backgrounds/linuxmint/default_background.jpg" ]; then
+        WALLPAPER_PATH="/usr/share/backgrounds/linuxmint/default_background.jpg"
+    fi
 fi
 
 # ==========================================
@@ -35,9 +51,29 @@ apply_wallpaper() {
         fi
     fi
 
-    # 2. ロック画面用画像の生成 (存在しない場合)
-    if [ ! -f "$LOCK_IMG" ] && [ -f "$HELPER_PY" ]; then
+    # 2. ロック画面用画像の同期生成
+    # ロック画面画像が存在しない、または壁紙と異なる場合に自動再生成して完全同期
+    local meta_file="$CONF_DIR/.lock_meta"
+    local cur_meta="${WALLPAPER_PATH}|${LOCK_STYLE}|${BG_COLOR}"
+    local need_regen=0
+
+    if [ ! -f "$LOCK_IMG" ]; then
+        need_regen=1
+    elif [ -f "$WALLPAPER_PATH" ] && [ "$WALLPAPER_PATH" -nt "$LOCK_IMG" ]; then
+        need_regen=1
+    elif [ -f "$meta_file" ]; then
+        local saved_meta
+        saved_meta=$(cat "$meta_file" 2>/dev/null)
+        if [ "$saved_meta" != "$cur_meta" ]; then
+            need_regen=1
+        fi
+    else
+        need_regen=1
+    fi
+
+    if [ "$need_regen" -eq 1 ] && [ -f "$HELPER_PY" ]; then
         python3 "$HELPER_PY" "$WALLPAPER_PATH" "$LOCK_IMG" "$LOCK_STYLE" "$BG_COLOR" >/dev/null 2>&1 || true
+        echo "$cur_meta" > "$meta_file" 2>/dev/null || true
     fi
 }
 
@@ -72,6 +108,7 @@ EOF
     # ロック画面画像の再生成
     if [ -f "$HELPER_PY" ]; then
         python3 "$HELPER_PY" "$WALLPAPER_PATH" "$LOCK_IMG" "$LOCK_STYLE" "$BG_COLOR" >/dev/null 2>&1 || true
+        echo "${WALLPAPER_PATH}|${LOCK_STYLE}|${BG_COLOR}" > "$CONF_DIR/.lock_meta" 2>/dev/null || true
     fi
 
     if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
