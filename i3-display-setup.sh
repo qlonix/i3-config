@@ -105,10 +105,21 @@ EOF
         fi
     fi
 
-    # 画面描画のガンマ・ソフトウェア輝度が下がったままにならないよう 1.0 にリセット
+    # 画面描画のガンマ・ソフトウェア輝度の調整とフルカラーレンジ適用
     if command -v xrandr &>/dev/null && [ -n "$DISPLAY" ]; then
+        local boost_val=100
+        if [ -f "$CONF_DIR/.brightness_boost" ]; then
+            local b
+            b=$(cat "$CONF_DIR/.brightness_boost" 2>/dev/null)
+            [[ "$b" =~ ^[0-9]+$ ]] && [ "$b" -ge 100 ] && [ "$b" -le 130 ] && boost_val="$b"
+        fi
+        local float_val
+        float_val=$(awk "BEGIN {printf \"%.2f\", $boost_val / 100}")
+
         for d in $(xrandr --current 2>/dev/null | grep -w "connected" | cut -d' ' -f1); do
-            xrandr --output "$d" --brightness 1.0 2>/dev/null || true
+            # フルカラーレンジ (0-255) を強制適用 (Intel GPUのLimited RGBによる白くすみ・減光を防止)
+            xrandr --output "$d" --set "Broadcast RGB" "Full" 2>/dev/null || true
+            xrandr --output "$d" --brightness "$float_val" 2>/dev/null || true
         done
     fi
 

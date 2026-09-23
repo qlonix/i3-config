@@ -149,10 +149,11 @@ GTK3/GTK4アプリケーションおよび i3wm のステータスバー・ウ�
 
 ノートPCのFnキーやファンクションキー（`XF86MonBrightnessUp` / `Down`）を押すことで、OSD通知バーとともに滑らかに画面の明るさを調整できます。
 
-- **インテリジェント・バックライト判定**:
+- **インテリジェント・バックライト判定 & ハイブリッド・ブースト**:
   - VAIO Pro などの Intel CPU 搭載機では、BIOS経由の `acpi_video0` と GPUネイティブの `intel_backlight` が同時に存在し、`acpi_video0` を操作すると最大輝度が 60〜70% 程度に制限されてしまう現象が発生します。
   - 本設定の `i3-media-control.sh` は、`intel_backlight`（または AMD/NVIDIA/Poulsbo ネイティブドライバ）を自動検出して優先制御するため、**液晶パネル本来の最大輝度 (100%) まで正確に出力**されます。
-  - ハードウェア輝度制御が利用できない環境では、`xrandr` によるソフトウェアガンマ輝度へ自動フォールバックします。
+  - **ソフトウェア輝度ブースト (105%〜130%)**: ハードウェアが物理最大 (100%) に達した状態でさらに `Brightness Up` キーを押すと、自動的にソフトウェアブーストモードへ移行し、最大 130% まで画面をさらに明るく増幅します。
+  - **フルカラーレンジ (Broadcast RGB: Full)**: Intel GPU 出力の Limited RGB (16-235) による白くすみ・減光を防止し、0-255 のフルレンジで駆動します。
 - **診断・手動操作コマンド**:
   ```bash
   # 画面輝度の状態・認識デバイスを診断
@@ -160,6 +161,15 @@ GTK3/GTK4アプリケーションおよび i3wm のステータスバー・ウ�
 
   # 画面を本来の最大輝度 (100%) に瞬時に設定
   ~/.config/i3/i3-media-control.sh bright-max
+
+  # 物理限界を超えて明るくする (120% ブースト)
+  ~/.config/i3/i3-media-control.sh bright-boost
+  ```
+- **💡 VAIO Pro / Intel 機でさらに明るく・くすみを消したい場合 (GRUB設定)**:
+  Intel GPUの動的省電力機能 (DPST / PSR) がバックライトを自動で暗くしている場合があります。
+  `/etc/default/grub` の `GRUB_CMDLINE_LINUX_DEFAULT` に以下を追記して `sudo update-grub` を実行すると、動的減光を無効化できます：
+  ```bash
+  GRUB_CMDLINE_LINUX_DEFAULT="... i915.enable_dpst=0 i915.enable_psr=0"
   ```
 
 ---

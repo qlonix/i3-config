@@ -73,8 +73,36 @@ get_best_backlight_device() {
     echo ""
 }
 
+BOOST_FILE="$HOME/.config/i3/.brightness_boost"
+
+get_boost() {
+    if [ -f "$BOOST_FILE" ]; then
+        local val
+        val=$(cat "$BOOST_FILE" 2>/dev/null)
+        if [[ "$val" =~ ^[0-9]+$ ]] && [ "$val" -ge 100 ] && [ "$val" -le 130 ]; then
+            echo "$val"
+            return 0
+        fi
+    fi
+    echo 100
+}
+
+set_xrandr_brightness() {
+    local val_pct=$1
+    local float_val
+    float_val=$(awk "BEGIN {printf \"%.2f\", $val_pct / 100}")
+    
+    if command -v xrandr &>/dev/null && [ -n "$DISPLAY" ]; then
+        for d in $(xrandr --current 2>/dev/null | grep -w "connected" | cut -d' ' -f1); do
+            # フルカラーレンジ (0-255) を強制適用 (Intel GPUのLimited RGBによる白くすみ・減光を防止)
+            xrandr --output "$d" --set "Broadcast RGB" "Full" 2>/dev/null || true
+            xrandr --output "$d" --brightness "$float_val" 2>/dev/null || true
+        done
+    fi
+}
+
 adjust_brightness() {
-    local dir="$1" # "up", "down", or "max"
+    local dir="$1" # "up", "down", "max", or "boost"
     local dev
     dev=$(get_best_backlight_device)
     local dev_args=()
@@ -82,28 +110,72 @@ adjust_brightness() {
     
     # 1. まず brightnessctl (ハードウェア輝度) を試す
     if command -v brightnessctl &>/dev/null; then
-        local err
-        if [ "$dir" = "up" ]; then
-            err=$(brightnessctl "${dev_args[@]}" set +5% 2>&1)
-        elif [ "$dir" = "down" ]; then
-            err=$(brightnessctl "${dev_args[@]}" set 5%- -n 1 2>&1)
-        elif [ "$dir" = "max" ]; then
-            err=$(brightnessctl "${dev_args[@]}" set 100% 2>&1)
-        fi
-        local ret=$?
+        local current_pct
+        current_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+        [ -z "$current_pct" ] && current_pct=100
         
-        if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]]; then
-            # 過去に xrandr ソフトウェア輝度で減光されていた場合はリセット (1.0)
-            local STATE_FILE="$HOME/.config/i3/.brightness_val"
-            if [ -f "$STATE_FILE" ]; then
-                rm -f "$STATE_FILE"
-                for d in $(xrandr 2>/dev/null | grep -w "connected" | cut -d' ' -f1); do
-                    xrandr --output "$d" --brightness 1.0 2>/dev/null || true
-                done
+        local current_boost
+        current_boost=$(get_boost)
+        
+        if [ "$dir" = "up" ]; then
+            if [ "$current_pct" -ge 100 ]; then
+                # ハードウェア輝度がすでに100%の場合、ソフトウェアブースト (最大130%まで増幅)
+                local new_boost=$((current_boost + 5))
+                [ $new_boost -gt 130 ] && new_boost=130
+                echo "$new_boost" > "$BOOST_FILE"
+                set_xrandr_brightness "$new_boost"
+                notify_osd "brightness" "🚀 明るさ (ブースト)" "$new_boost"
+                return 0
+            else
+                # 通常のハードウェア輝度アップ
+                brightnessctl "${dev_args[@]}" set +5% >/dev/null 2>&1
+                if [ "$current_boost" -ne 100 ]; then
+                    rm -f "$BOOST_FILE"
+                    set_xrandr_brightness 100
+                fi
+                local new_pct
+                new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+                notify_osd "brightness" "☀️ 明るさ" "$new_pct"
+                return 0
             fi
             
-            BRIGHT=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
-            notify_osd "brightness" "☀️ 明るさ" "$BRIGHT"
+        elif [ "$dir" = "down" ]; then
+            if [ "$current_boost" -gt 100 ]; then
+                # ブースト中の場合はブーストを段階的に下げる
+                local new_boost=$((current_boost - 5))
+                if [ $new_boost -le 100 ]; then
+                    rm -f "$BOOST_FILE"
+                    set_xrandr_brightness 100
+                    notify_osd "brightness" "☀️ 明るさ" "100"
+                else
+                    echo "$new_boost" > "$BOOST_FILE"
+                    set_xrandr_brightness "$new_boost"
+                    notify_osd "brightness" "🚀 明るさ (ブースト)" "$new_boost"
+                fi
+                return 0
+            else
+                # 通常のハードウェア減光 (最低 1% を保持してブラックアウト防止)
+                brightnessctl "${dev_args[@]}" set 5%- -n 1 >/dev/null 2>&1
+                local new_pct
+                new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+                notify_osd "brightness" "☀️ 明るさ" "$new_pct"
+                return 0
+            fi
+            
+        elif [ "$dir" = "max" ]; then
+            # 通常のハードウェア100% (ブーストなし)
+            rm -f "$BOOST_FILE"
+            set_xrandr_brightness 100
+            brightnessctl "${dev_args[@]}" set 100% >/dev/null 2>&1
+            notify_osd "brightness" "☀️ 明るさ (最大)" "100"
+            return 0
+            
+        elif [ "$dir" = "boost" ]; then
+            # 120% ソフトウェアブーストに設定
+            brightnessctl "${dev_args[@]}" set 100% >/dev/null 2>&1
+            echo "120" > "$BOOST_FILE"
+            set_xrandr_brightness 120
+            notify_osd "brightness" "🚀 明るさ (120% ブースト)" "120"
             return 0
         fi
     fi
@@ -117,21 +189,21 @@ adjust_brightness() {
     
     if [ "$dir" = "up" ]; then
         CURR=$((CURR + 5))
-        [ $CURR -gt 100 ] && CURR=100
+        [ $CURR -gt 130 ] && CURR=130
     elif [ "$dir" = "down" ]; then
         CURR=$((CURR - 5))
         [ $CURR -lt 10 ] && CURR=10
     elif [ "$dir" = "max" ]; then
         CURR=100
+    elif [ "$dir" = "boost" ]; then
+        CURR=120
     fi
     
     echo "$CURR" > "$STATE_FILE"
-    
-    local FLOAT_VAL=$(awk "BEGIN {printf \"%.2f\", $CURR / 100}")
-    local DISP=$(xrandr 2>/dev/null | grep -w "connected" | cut -d' ' -f1 | head -n 1)
-    
-    if [ -n "$DISP" ]; then
-        xrandr --output "$DISP" --brightness "$FLOAT_VAL" 2>/dev/null || true
+    set_xrandr_brightness "$CURR"
+    if [ "$CURR" -gt 100 ]; then
+        notify_osd "brightness" "🚀 明るさ (ブースト)" "$CURR"
+    else
         notify_osd "brightness" "☀️ 明るさ" "$CURR"
     fi
 }
@@ -158,12 +230,22 @@ show_brightness_status() {
     local best=$(get_best_backlight_device)
     echo "優先選択デバイス: ${best:-なし (xrandr fallback)}"
     
+    local boost=$(get_boost)
+    echo "ソフトウェアブースト状態: ${boost}%"
+    
     if command -v xrandr &>/dev/null && [ -n "$DISPLAY" ]; then
-        echo "接続ディスプレイ:"
-        xrandr --verbose 2>/dev/null | grep -E "connected|Brightness:" | while read -r line; do
+        echo ""
+        echo "接続ディスプレイとカラーレンジ設定 (xrandr):"
+        xrandr --verbose 2>/dev/null | grep -E "connected|Brightness:|Broadcast RGB:" | while read -r line; do
             echo "  $line"
         done
     fi
+    
+    echo ""
+    echo "💡 ヒント:"
+    echo "  - 画面を最大輝度 (100%) に設定: $0 bright-max"
+    echo "  - 物理限界を超えて明るくする:   $0 bright-boost (120% ブースト)"
+    echo "  - もしくは 100% 時にさらに Brightness Up を押すと最大130%までブーストされます"
     echo "=============================="
 }
 
@@ -197,11 +279,14 @@ case "$1" in
     bright-max)
         adjust_brightness "max"
         ;;
+    bright-boost)
+        adjust_brightness "boost"
+        ;;
     bright-status)
         show_brightness_status
         ;;
     *)
-        echo "Usage: $0 {vol-up|vol-down|vol-mute|bright-up|bright-down|bright-max|bright-status}"
+        echo "Usage: $0 {vol-up|vol-down|vol-mute|bright-up|bright-down|bright-max|bright-boost|bright-status}"
         exit 1
         ;;
 esac
