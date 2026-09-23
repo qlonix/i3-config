@@ -1,38 +1,106 @@
 #!/bin/bash
 
 # ==========================================
-# i3wm 電源・省電力設定ツール
-# 画面消灯、スリープ移行時間、バッテリー時輝度調整、
-# ハイブリッドスリープ等の設定を行います。
+# i3wm 電源・省電力 & 画面ロック設定ツール
+# 画面消灯、自動画面ロック待機時間、スリープ移行時間、
+# バッテリー時輝度調整、ハイブリッドスリープ等の設定を行います。
 # ==========================================
 
 CONF_DIR="$HOME/.config/i3"
 POWER_CONF="$CONF_DIR/power.conf"
 
-# 現在のモードを読み込み
-SLEEP_MODE="suspend"
+# デフォルト設定値
+SLEEP_MODE="suspend-then-hibernate"
+LOCK_TIMEOUT=300
+DPMS_TIMEOUT=600
+
+# 保存された設定を読み込み
 if [ -f "$POWER_CONF" ]; then
     . "$POWER_CONF"
 fi
 
+# ==========================================
+# apply モード: i3起動時・再読み込み時に設定を適用
+# ==========================================
+apply_settings() {
+    # 1. アイドル時のスクリーンセーバー (画面ロック発火用) 設定
+    if [ -n "$LOCK_TIMEOUT" ] && [ "$LOCK_TIMEOUT" -gt 0 ] 2>/dev/null; then
+        xset s "$LOCK_TIMEOUT" "$LOCK_TIMEOUT"
+    else
+        xset s off
+    fi
+
+    # 2. DPMS (ディスプレイ消灯) 設定
+    if [ -n "$DPMS_TIMEOUT" ] && [ "$DPMS_TIMEOUT" -gt 0 ] 2>/dev/null; then
+        xset +dpms
+        xset dpms 0 0 "$DPMS_TIMEOUT"
+    else
+        xset -dpms
+    fi
+
+    # 3. xfce4-power-manager が起動している場合、蓋閉じ処理を systemd-logind に委譲
+    if command -v xfconf-query &>/dev/null && pgrep -x xfce4-power-manager >/dev/null 2>&1; then
+        xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/logind-handle-lid-switch -s true --create -t bool 2>/dev/null || true
+    fi
+
+    # 4. xss-lock デーモンが動いていなければ起動
+    if command -v xss-lock &>/dev/null && command -v i3lock &>/dev/null; then
+        if ! pgrep -x xss-lock >/dev/null; then
+            xss-lock --transfer-sleep-lock -- i3lock --nofork -c 000000 &
+        fi
+    fi
+}
+
+if [ "$1" = "apply" ]; then
+    apply_settings
+    exit 0
+fi
+
+save_power_conf() {
+    mkdir -p "$CONF_DIR"
+    cat <<EOF > "$POWER_CONF"
+# i3wm Power & Lock Configuration
+SLEEP_MODE="$SLEEP_MODE"
+LOCK_TIMEOUT=$LOCK_TIMEOUT
+DPMS_TIMEOUT=$DPMS_TIMEOUT
+EOF
+    apply_settings
+}
+
 show_menu() {
+    local lock_display="無効"
+    if [ "$LOCK_TIMEOUT" -gt 0 ] 2>/dev/null; then
+        lock_display="$((LOCK_TIMEOUT / 60)) 分 (${LOCK_TIMEOUT}秒)"
+    fi
+
+    local dpms_display="無効"
+    if [ "$DPMS_TIMEOUT" -gt 0 ] 2>/dev/null; then
+        dpms_display="$((DPMS_TIMEOUT / 60)) 分 (${DPMS_TIMEOUT}秒)"
+    fi
+
     echo "======================================"
-    echo " 🔋 電源・省電力設定 (Power Management)"
+    echo " 🔋 電源・省電力・画面ロック設定"
     echo "======================================"
     echo "1) 🖥️ 画面消灯・スリープ時間・輝度調整の設定 (GUI)"
-    echo "   -> xfce4-power-manager を起動します(未インストールの場合はインストール)"
-    echo "2) 🌙 「スリープ」ボタンのアクションを変更"
+    echo "   -> xfce4-power-manager を起動します"
+    echo "2) 🔒 アイドル画面ロック待機時間の設定"
+    echo "   -> 現在: $lock_display"
+    echo "3) 📺 画面消灯 (DPMS) 待機時間の設定"
+    echo "   -> 現在: $dpms_display"
+    echo "4) 🌙 「スリープ」ボタンのアクションを変更"
     echo "   -> 現在: $SLEEP_MODE"
-    echo "3) ⏳ Suspend-then-Hibernate の移行待機時間を設定"
+    echo "5) ⏳ Suspend-then-Hibernate の移行待機時間を設定"
     echo "   -> スリープから休止状態へ移行するまでの時間 (要sudo)"
     echo "0) 終了"
     echo "======================================"
-    read -p "番号を選択 (0-3): " choice
+    read -p "番号を選択 (0-5): " choice
 
     case "$choice" in
         1) setup_gui_power_manager ;;
-        2) setup_sleep_mode ;;
-        3) setup_hibernate_delay ;;
+        2) setup_lock_timeout ;;
+        3) setup_dpms_timeout ;;
+        4) setup_sleep_mode ;;
+        5) setup_hibernate_delay ;;
         0) exit 0 ;;
         *) echo "無効な入力です。"; sleep 1; show_menu ;;
     esac
@@ -62,6 +130,95 @@ setup_gui_power_manager() {
     show_menu
 }
 
+setup_lock_timeout() {
+    echo ""
+    echo "======================================"
+    echo " 🔒 アイドル画面ロック待機時間の設定"
+    echo " 操作がない状態が続いた場合に自動で画面をロックします"
+    echo "======================================"
+    echo "1) 3分 (180秒)"
+    echo "2) 5分 (300秒) [推奨]"
+    echo "3) 10分 (600秒)"
+    echo "4) 15分 (900秒)"
+    echo "5) 30分 (1800秒)"
+    echo "6) 秒数を直接入力"
+    echo "7) 自動ロックを無効化 (0)"
+    echo "0) 戻る"
+    read -p "番号を選択 (0-7): " lchoice
+
+    case "$lchoice" in
+        1) LOCK_TIMEOUT=180 ;;
+        2) LOCK_TIMEOUT=300 ;;
+        3) LOCK_TIMEOUT=600 ;;
+        4) LOCK_TIMEOUT=900 ;;
+        5) LOCK_TIMEOUT=1800 ;;
+        6)
+            read -p "待機秒数を入力してください (例: 300): " custom_sec
+            if [[ "$custom_sec" =~ ^[0-9]+$ ]]; then
+                LOCK_TIMEOUT=$custom_sec
+            else
+                echo "無効な秒数です。"
+                sleep 1; setup_lock_timeout; return
+            fi
+            ;;
+        7) LOCK_TIMEOUT=0 ;;
+        0) show_menu; return ;;
+        *) echo "無効な入力です。"; sleep 1; setup_lock_timeout; return ;;
+    esac
+
+    save_power_conf
+    echo "画面ロック待機時間を $LOCK_TIMEOUT 秒に設定しました。"
+    if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
+        notify-send "🔒 画面ロック設定" "アイドル待機時間を ${LOCK_TIMEOUT}秒 に更新しました"
+    fi
+    sleep 1
+    show_menu
+}
+
+setup_dpms_timeout() {
+    echo ""
+    echo "======================================"
+    echo " 📺 画面消灯 (DPMS) 待機時間の設定"
+    echo " 操作がない状態が続いた場合にディスプレイの電源を切ります"
+    echo " (※画面ロック時間より長めに設定することを推奨します)"
+    echo "======================================"
+    echo "1) 5分 (300秒)"
+    echo "2) 10分 (600秒) [推奨]"
+    echo "3) 15分 (900秒)"
+    echo "4) 30分 (1800秒)"
+    echo "5) 秒数を直接入力"
+    echo "6) 画面消灯を無効化 (0)"
+    echo "0) 戻る"
+    read -p "番号を選択 (0-6): " dchoice
+
+    case "$dchoice" in
+        1) DPMS_TIMEOUT=300 ;;
+        2) DPMS_TIMEOUT=600 ;;
+        3) DPMS_TIMEOUT=900 ;;
+        4) DPMS_TIMEOUT=1800 ;;
+        5)
+            read -p "待機秒数を入力してください (例: 600): " custom_dpms
+            if [[ "$custom_dpms" =~ ^[0-9]+$ ]]; then
+                DPMS_TIMEOUT=$custom_dpms
+            else
+                echo "無効な秒数です。"
+                sleep 1; setup_dpms_timeout; return
+            fi
+            ;;
+        6) DPMS_TIMEOUT=0 ;;
+        0) show_menu; return ;;
+        *) echo "無効な入力です。"; sleep 1; setup_dpms_timeout; return ;;
+    esac
+
+    save_power_conf
+    echo "画面消灯待機時間を $DPMS_TIMEOUT 秒に設定しました。"
+    if command -v notify-send &>/dev/null && [ -n "$DISPLAY" ]; then
+        notify-send "📺 画面消灯設定" "消灯待機時間を ${DPMS_TIMEOUT}秒 に更新しました"
+    fi
+    sleep 1
+    show_menu
+}
+
 setup_sleep_mode() {
     echo ""
     echo "======================================"
@@ -81,7 +238,7 @@ setup_sleep_mode() {
         *) echo "無効な入力です。"; sleep 1; setup_sleep_mode; return ;;
     esac
 
-    echo "SLEEP_MODE=\"$SLEEP_MODE\"" > "$POWER_CONF"
+    save_power_conf
     echo "スリープモードを '$SLEEP_MODE' に設定しました。"
     echo "次回からメニューの「スリープ」を選択した際、このアクションが実行されます。"
     sleep 2
@@ -101,8 +258,6 @@ setup_hibernate_delay() {
 
     if [ -n "$delay" ]; then
         echo "システム設定ファイル (/etc/systemd/sleep.conf) を編集します。"
-        # systemd >= 252 uses HibernateDelaySec, older might use HibernateDelaySec too.
-        # Uncomment or add HibernateDelaySec=...
         sudo sed -i '/^#HibernateDelaySec=/d' /etc/systemd/sleep.conf
         sudo sed -i '/^HibernateDelaySec=/d' /etc/systemd/sleep.conf
         
