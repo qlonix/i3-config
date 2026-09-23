@@ -105,6 +105,13 @@ EOF
         fi
     fi
 
+    # 画面描画のガンマ・ソフトウェア輝度が下がったままにならないよう 1.0 にリセット
+    if command -v xrandr &>/dev/null && [ -n "$DISPLAY" ]; then
+        for d in $(xrandr --current 2>/dev/null | grep -w "connected" | cut -d' ' -f1); do
+            xrandr --output "$d" --brightness 1.0 2>/dev/null || true
+        done
+    fi
+
     if [ "$silent" != "silent" ]; then
         local msg
         case "$mode" in

@@ -43,21 +43,66 @@ notify_osd() {
     fi
 }
 
+# 最適なバックライトデバイスを自動検出 (VAIO Pro 等で acpi_video0 ではなく intel_backlight を優先)
+get_best_backlight_device() {
+    if [ -d /sys/class/backlight ]; then
+        # 1. GPUネイティブドライバを最優先 (Intel, AMD, NVIDIA, Poulsbo/VAIO X)
+        for dev in intel_backlight amdgpu_bl0 amdgpu_bl1 psb-bl; do
+            if [ -d "/sys/class/backlight/$dev" ]; then
+                echo "$dev"
+                return 0
+            fi
+        done
+        
+        # 2. type が native のデバイスを検索
+        for p in /sys/class/backlight/*; do
+            if [ -f "$p/type" ] && [ "$(cat "$p/type" 2>/dev/null)" = "native" ]; then
+                basename "$p"
+                return 0
+            fi
+        done
+        
+        # 3. その他存在するバックライトデバイス (acpi_video等)
+        for p in /sys/class/backlight/*; do
+            if [ -d "$p" ]; then
+                basename "$p"
+                return 0
+            fi
+        done
+    fi
+    echo ""
+}
+
 adjust_brightness() {
-    local dir="$1" # "up" or "down"
+    local dir="$1" # "up", "down", or "max"
+    local dev
+    dev=$(get_best_backlight_device)
+    local dev_args=()
+    [ -n "$dev" ] && dev_args=(-d "$dev")
     
     # 1. まず brightnessctl (ハードウェア輝度) を試す
     if command -v brightnessctl &>/dev/null; then
         local err
         if [ "$dir" = "up" ]; then
-            err=$(brightnessctl set +5% 2>&1)
-        else
-            err=$(brightnessctl set 5%- 2>&1)
+            err=$(brightnessctl "${dev_args[@]}" set +5% 2>&1)
+        elif [ "$dir" = "down" ]; then
+            err=$(brightnessctl "${dev_args[@]}" set 5%- -n 1 2>&1)
+        elif [ "$dir" = "max" ]; then
+            err=$(brightnessctl "${dev_args[@]}" set 100% 2>&1)
         fi
         local ret=$?
         
         if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]]; then
-            BRIGHT=$(brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+            # 過去に xrandr ソフトウェア輝度で減光されていた場合はリセット (1.0)
+            local STATE_FILE="$HOME/.config/i3/.brightness_val"
+            if [ -f "$STATE_FILE" ]; then
+                rm -f "$STATE_FILE"
+                for d in $(xrandr 2>/dev/null | grep -w "connected" | cut -d' ' -f1); do
+                    xrandr --output "$d" --brightness 1.0 2>/dev/null || true
+                done
+            fi
+            
+            BRIGHT=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
             notify_osd "brightness" "☀️ 明るさ" "$BRIGHT"
             return 0
         fi
@@ -73,9 +118,11 @@ adjust_brightness() {
     if [ "$dir" = "up" ]; then
         CURR=$((CURR + 5))
         [ $CURR -gt 100 ] && CURR=100
-    else
+    elif [ "$dir" = "down" ]; then
         CURR=$((CURR - 5))
         [ $CURR -lt 10 ] && CURR=10
+    elif [ "$dir" = "max" ]; then
+        CURR=100
     fi
     
     echo "$CURR" > "$STATE_FILE"
@@ -87,6 +134,37 @@ adjust_brightness() {
         xrandr --output "$DISP" --brightness "$FLOAT_VAL" 2>/dev/null || true
         notify_osd "brightness" "☀️ 明るさ" "$CURR"
     fi
+}
+
+show_brightness_status() {
+    echo "=== 画面輝度ステータス診断 ==="
+    echo "利用可能なバックライトデバイス (/sys/class/backlight):"
+    if [ -d /sys/class/backlight ]; then
+        for p in /sys/class/backlight/*; do
+            if [ -d "$p" ]; then
+                local bname=$(basename "$p")
+                local cur=$(cat "$p/brightness" 2>/dev/null)
+                local max=$(cat "$p/max_brightness" 2>/dev/null)
+                local type=$(cat "$p/type" 2>/dev/null)
+                local pct=0
+                [ -n "$max" ] && [ "$max" -gt 0 ] 2>/dev/null && pct=$(( cur * 100 / max ))
+                echo "  - $bname (type: $type): $cur / $max (${pct}%)"
+            fi
+        done
+    else
+        echo "  (見つかりません)"
+    fi
+    
+    local best=$(get_best_backlight_device)
+    echo "優先選択デバイス: ${best:-なし (xrandr fallback)}"
+    
+    if command -v xrandr &>/dev/null && [ -n "$DISPLAY" ]; then
+        echo "接続ディスプレイ:"
+        xrandr --verbose 2>/dev/null | grep -E "connected|Brightness:" | while read -r line; do
+            echo "  $line"
+        done
+    fi
+    echo "=============================="
 }
 
 case "$1" in
@@ -116,8 +194,14 @@ case "$1" in
     bright-down)
         adjust_brightness "down"
         ;;
+    bright-max)
+        adjust_brightness "max"
+        ;;
+    bright-status)
+        show_brightness_status
+        ;;
     *)
-        echo "Usage: $0 {vol-up|vol-down|vol-mute|bright-up|bright-down}"
+        echo "Usage: $0 {vol-up|vol-down|vol-mute|bright-up|bright-down|bright-max|bright-status}"
         exit 1
         ;;
 esac
