@@ -53,6 +53,7 @@ bindsym $mod+Control+t exec --no-startup-id ~/.config/i3/i3-theme-setup.sh
 bindsym $mod+Control+s exec --no-startup-id ~/.config/i3/i3-display-setup.sh
 bindsym $mod+Control+p exec --no-startup-id ~/.config/i3/i3-power-setup.sh
 bindsym $mod+Control+w exec --no-startup-id i3-sensible-terminal -e ~/.config/i3/i3-wallpaper-setup.sh
+bindsym $mod+Control+o exec --no-startup-id i3-sensible-terminal -e ~/.config/i3/i3-autostart.sh
 bindsym $mod+Control+l exec --no-startup-id ~/.config/i3/i3-lock.sh
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/i3-cheatsheet.sh
 bindsym $mod+Shift+e exec --no-startup-id ~/.config/i3/i3-sysmenu.sh
@@ -193,20 +194,6 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.config/i3/i3-lock.sh
 # システムアップデートの定期チェックデーモン
 exec --no-startup-id ~/.config/i3/i3-update-checker.sh
 
-# 通知デーモンの起動 (OSDポップアップ用)
-exec --no-startup-id dunst
-
-# 電源管理デーモン (画面消灯・スリープ時間管理・バッテリー輝度調整等)
-exec --no-startup-id bash -c 'if command -v xfce4-power-manager >/dev/null 2>&1; then xfce4-power-manager; fi'
-
-# XSETTINGS デーモンの起動 (アプリテーマリアルタイム同期用)
-exec --no-startup-id xsettingsd
-
-# コンポジタ (透明化や影の描画、チラつき防止 / picomが必要)
-# exec_always --no-startup-id picom -b
-
-# ネットワークマネージャーのアプレット
-exec --no-startup-id nm-applet
-
-# Ulauncherがインストールされている場合、バックグラウンドで起動
-exec --no-startup-id bash -c 'if command -v ulauncher >/dev/null 2>&1; then ulauncher --hide-window; fi'
+# ユーザー選択アプリケーション & デーモンの自動起動 (autostart.conf より実行)
+# (nm-applet, xsettingsd, dunst, xfce4-power-manager, picom, IME 等の選択中アプリを一括起動)
+exec --no-startup-id ~/.config/i3/i3-autostart.sh apply
