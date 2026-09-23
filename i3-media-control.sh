@@ -108,83 +108,101 @@ adjust_brightness() {
     local dev_args=()
     [ -n "$dev" ] && dev_args=(-d "$dev")
     
+    local hw_success=0
+    local new_pct=""
+    
     # 1. まず brightnessctl (ハードウェア輝度) を試す
     if command -v brightnessctl &>/dev/null; then
         local current_pct
-        current_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
-        [ -z "$current_pct" ] && current_pct=100
+        current_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | head -n 1 | cut -d, -f4 | tr -d '%')
         
-        local current_boost
-        current_boost=$(get_boost)
-        
-        if [ "$dir" = "up" ]; then
-            if [ "$current_pct" -ge 100 ]; then
-                # ハードウェア輝度がすでに100%の場合、ソフトウェアブースト (最大130%まで増幅)
-                local new_boost=$((current_boost + 5))
-                [ $new_boost -gt 130 ] && new_boost=130
-                echo "$new_boost" > "$BOOST_FILE"
-                set_xrandr_brightness "$new_boost"
-                notify_osd "brightness" "🚀 明るさ (ブースト)" "$new_boost"
-                return 0
-            else
-                # 通常のハードウェア輝度アップ
-                brightnessctl "${dev_args[@]}" set +5% >/dev/null 2>&1
-                if [ "$current_boost" -ne 100 ]; then
-                    rm -f "$BOOST_FILE"
-                    set_xrandr_brightness 100
-                fi
-                local new_pct
-                new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
-                notify_osd "brightness" "☀️ 明るさ" "$new_pct"
-                return 0
-            fi
+        if [[ "$current_pct" =~ ^[0-9]+$ ]]; then
+            local current_boost
+            current_boost=$(get_boost)
             
-        elif [ "$dir" = "down" ]; then
-            if [ "$current_boost" -gt 100 ]; then
-                # ブースト中の場合はブーストを段階的に下げる
-                local new_boost=$((current_boost - 5))
-                if [ $new_boost -le 100 ]; then
-                    rm -f "$BOOST_FILE"
-                    set_xrandr_brightness 100
-                    notify_osd "brightness" "☀️ 明るさ" "100"
-                else
+            if [ "$dir" = "up" ]; then
+                if [ "$current_pct" -ge 100 ]; then
+                    # ハードウェアがすでに100%の場合、ソフトウェアブースト (最大130%)
+                    local new_boost=$((current_boost + 5))
+                    [ $new_boost -gt 130 ] && new_boost=130
                     echo "$new_boost" > "$BOOST_FILE"
                     set_xrandr_brightness "$new_boost"
                     notify_osd "brightness" "🚀 明るさ (ブースト)" "$new_boost"
+                    return 0
+                else
+                    local err
+                    err=$(brightnessctl "${dev_args[@]}" set +5% 2>&1)
+                    local ret=$?
+                    if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]] && [[ "$err" != *"failed"* ]]; then
+                        hw_success=1
+                        if [ "$current_boost" -ne 100 ]; then
+                            rm -f "$BOOST_FILE"
+                            set_xrandr_brightness 100
+                        fi
+                        new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | head -n 1 | cut -d, -f4 | tr -d '%')
+                    fi
                 fi
-                return 0
-            else
-                # 通常のハードウェア減光 (最低 1% を保持してブラックアウト防止)
-                brightnessctl "${dev_args[@]}" set 5%- -n 1 >/dev/null 2>&1
-                local new_pct
-                new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | cut -d, -f4 | tr -d '%')
+            elif [ "$dir" = "down" ]; then
+                if [ "$current_boost" -gt 100 ]; then
+                    local new_boost=$((current_boost - 5))
+                    if [ $new_boost -le 100 ]; then
+                        rm -f "$BOOST_FILE"
+                        set_xrandr_brightness 100
+                        notify_osd "brightness" "☀️ 明るさ" "100"
+                    else
+                        echo "$new_boost" > "$BOOST_FILE"
+                        set_xrandr_brightness "$new_boost"
+                        notify_osd "brightness" "🚀 明るさ (ブースト)" "$new_boost"
+                    fi
+                    return 0
+                else
+                    local err
+                    err=$(brightnessctl "${dev_args[@]}" -n 1 set 5%- 2>&1)
+                    local ret=$?
+                    if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]] && [[ "$err" != *"failed"* ]]; then
+                        hw_success=1
+                        new_pct=$(brightnessctl "${dev_args[@]}" -m 2>/dev/null | head -n 1 | cut -d, -f4 | tr -d '%')
+                    fi
+                fi
+            elif [ "$dir" = "max" ]; then
+                local err
+                err=$(brightnessctl "${dev_args[@]}" set 100% 2>&1)
+                local ret=$?
+                if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]] && [[ "$err" != *"failed"* ]]; then
+                    hw_success=1
+                    rm -f "$BOOST_FILE"
+                    set_xrandr_brightness 100
+                    notify_osd "brightness" "☀️ 明るさ (最大)" "100"
+                    return 0
+                fi
+            elif [ "$dir" = "boost" ]; then
+                local err
+                err=$(brightnessctl "${dev_args[@]}" set 100% 2>&1)
+                local ret=$?
+                if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]] && [[ "$err" != *"failed"* ]]; then
+                    echo "120" > "$BOOST_FILE"
+                    set_xrandr_brightness 120
+                    notify_osd "brightness" "🚀 明るさ (120% ブースト)" "120"
+                    return 0
+                fi
+            fi
+            
+            # ハードウェア輝度操作が正常終了した場合
+            if [ $hw_success -eq 1 ] && [ -n "$new_pct" ]; then
                 notify_osd "brightness" "☀️ 明るさ" "$new_pct"
                 return 0
             fi
-            
-        elif [ "$dir" = "max" ]; then
-            # 通常のハードウェア100% (ブーストなし)
-            rm -f "$BOOST_FILE"
-            set_xrandr_brightness 100
-            brightnessctl "${dev_args[@]}" set 100% >/dev/null 2>&1
-            notify_osd "brightness" "☀️ 明るさ (最大)" "100"
-            return 0
-            
-        elif [ "$dir" = "boost" ]; then
-            # 120% ソフトウェアブーストに設定
-            brightnessctl "${dev_args[@]}" set 100% >/dev/null 2>&1
-            echo "120" > "$BOOST_FILE"
-            set_xrandr_brightness 120
-            notify_osd "brightness" "🚀 明るさ (120% ブースト)" "120"
-            return 0
         fi
     fi
     
-    # 2. brightnessctl が権限エラー等で失敗した場合、xrandr (ソフトウェア輝度) に自動フォールバック
+    # 2. brightnessctl が存在しない、または権限エラー等で失敗した場合、xrandr (ソフトウェア輝度) に自動フォールバック
     local STATE_FILE="$HOME/.config/i3/.brightness_val"
     local CURR=100
     if [ -f "$STATE_FILE" ]; then
-        CURR=$(cat "$STATE_FILE")
+        CURR=$(cat "$STATE_FILE" 2>/dev/null)
+    fi
+    if ! [[ "$CURR" =~ ^[0-9]+$ ]]; then
+        CURR=100
     fi
     
     if [ "$dir" = "up" ]; then
@@ -227,8 +245,26 @@ show_brightness_status() {
         echo "  (見つかりません)"
     fi
     
-    local best=$(get_best_backlight_device)
-    echo "優先選択デバイス: ${best:-なし (xrandr fallback)}"
+    local dev=$(get_best_backlight_device)
+    echo "優先選択デバイス: ${dev:-なし (xrandr fallback)}"
+    
+    if command -v brightnessctl &>/dev/null; then
+        local dev_args=()
+        [ -n "$dev" ] && dev_args=(-d "$dev")
+        local test_err
+        test_err=$(brightnessctl "${dev_args[@]}" set +0% 2>&1)
+        local test_ret=$?
+        if [ $test_ret -eq 0 ] && [[ "$test_err" != *"Permission denied"* ]] && [[ "$test_err" != *"failed"* ]]; then
+            echo "brightnessctl 権限: ✅ 正常 (ハードウェア直接制御可能)"
+        else
+            echo "brightnessctl 権限: ⚠️ 権限不足 (Permission denied 等)"
+            echo "  -> xrandr ソフトウェア制御に自動フォールバックして動作します"
+            echo "  -> 一般ユーザーでハードウェア制御を許可する場合:"
+            echo "     sudo usermod -aG video \$USER (再ログイン後に有効)"
+        fi
+    else
+        echo "brightnessctl: ⚠️ 未インストール (xrandr ソフトウェア制御で動作)"
+    fi
     
     local boost=$(get_boost)
     echo "ソフトウェアブースト状態: ${boost}%"
@@ -245,7 +281,7 @@ show_brightness_status() {
     echo "💡 ヒント:"
     echo "  - 画面を最大輝度 (100%) に設定: $0 bright-max"
     echo "  - 物理限界を超えて明るくする:   $0 bright-boost (120% ブースト)"
-    echo "  - もしくは 100% 時にさらに Brightness Up を押すと最大130%までブーストされます"
+    echo "  - 100% 時にさらに Brightness Up を押すと最大130%までブーストされます"
     echo "=============================="
 }
 
