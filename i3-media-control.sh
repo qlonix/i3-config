@@ -157,7 +157,11 @@ adjust_brightness() {
                     return 0
                 else
                     local err
-                    err=$(brightnessctl "${dev_args[@]}" -n 1 set 5%- 2>&1)
+                    if [ "$current_pct" -le 5 ]; then
+                        err=$(brightnessctl "${dev_args[@]}" set 2% 2>&1)
+                    else
+                        err=$(brightnessctl "${dev_args[@]}" set 5%- 2>&1)
+                    fi
                     local ret=$?
                     if [ $ret -eq 0 ] && [[ "$err" != *"Permission denied"* ]] && [[ "$err" != *"failed"* ]]; then
                         hw_success=1
@@ -188,7 +192,8 @@ adjust_brightness() {
             fi
             
             # ハードウェア輝度操作が正常終了した場合
-            if [ $hw_success -eq 1 ] && [ -n "$new_pct" ]; then
+            if [ $hw_success -eq 1 ]; then
+                [ -z "$new_pct" ] && new_pct="$current_pct"
                 notify_osd "brightness" "☀️ 明るさ" "$new_pct"
                 return 0
             fi
@@ -200,6 +205,8 @@ adjust_brightness() {
     local CURR=100
     if [ -f "$STATE_FILE" ]; then
         CURR=$(cat "$STATE_FILE" 2>/dev/null)
+    elif [[ "$current_pct" =~ ^[0-9]+$ ]]; then
+        CURR="$current_pct"
     fi
     if ! [[ "$CURR" =~ ^[0-9]+$ ]]; then
         CURR=100
